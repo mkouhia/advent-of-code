@@ -14,7 +14,7 @@ __day_functions = {
 @click.option("--session-id")
 def cli(day, session_id):
     if day not in __day_functions:
-        raise NotImplemented('Day %s: solution not implemented.')
+        raise NotImplemented("Day %s: solution not implemented.")
     data = get_data(day=day, session_id=session_id)
     solution = __day_functions[day](data)
     print(solution)
