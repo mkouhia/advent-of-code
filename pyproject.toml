@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "advent-of-code-2023"
+name = "advent-of-code"
 version = "0.1.0"
-description = ""
+description = "Solutions to https://adventofcode.com"
 authors = ["Mikko Kouhia <mikko.kouhia@iki.fi>"]
 
 [tool.poetry.dependencies]

@@ -1,4 +1,4 @@
-from advent_of_code_2023 import __version__
+from advent_of_code import __version__
 
 
 def test_version():

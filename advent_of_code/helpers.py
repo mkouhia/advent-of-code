@@ -22,7 +22,7 @@ def _get_data_online(year, day, session_id) -> str:
     return response.text
 
 
-def _get_cache_dir(day, cache_root="~/.cache/advent_of_code_2023", year=2023) -> Path:
+def _get_cache_dir(day, cache_root="~/.cache/advent_of_code", year=2023) -> Path:
     loc = Path(cache_root).expanduser() / str(year) / str(day)
 
     if not loc.exists():

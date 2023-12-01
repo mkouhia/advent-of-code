@@ -1,5 +1,5 @@
 import pytest
-from advent_of_code_2023.day01 import calibrate_document, calibration_value
+from advent_of_code.y23.day01 import calibrate_document, calibration_value
 
 
 @pytest.mark.parametrize(
