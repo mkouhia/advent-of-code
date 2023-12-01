@@ -1,3 +1,8 @@
+"""Advent of Code command line interface runner.
+
+Run functions against downloaded input files.
+"""
+
 import datetime
 import click
 
@@ -10,23 +15,39 @@ _functions = {
     2023: y23._day_functions,
 }
 
-_today = default=datetime.date.today()
+_today = default = datetime.date.today()
+
 
 @click.command
-@click.option("--day", type=int, default=_today.day)
-@click.option("--year", type=int, default=_today.year)
-@click.option("--session-id")
-def cli(year, day, session_id):
+@click.option(
+    "--day",
+    type=int,
+    default=_today.day,
+    help=f"Event day. Default: today (day={_today.day}).",
+)
+@click.option(
+    "--year",
+    type=int,
+    default=_today.year,
+    help=f"Event year. Default: this year ({_today.year}).",
+)
+def cli(year: int, day: int):
+    """Run developed functions on Advent of Code data."""
     if year not in _functions:
-        raise NotImplementedError(f"Year {year}: not implemented")
-    
+        click.echo(f"Year {year}: not implemented", err=True)
+        return
+
     day_functions = _functions[year]
     if day not in day_functions:
-        raise NotImplementedError(f"{year} day {day}: solution not implemented.")
+        click.echo(f"{year} day {day}: solution not implemented.", err=True)
+        return
 
-    data = get_data(day=day, session_id=session_id)
+    try:
+        data = get_data(year=year, day=day)
+    except UserWarning as err:
+        click.echo(err, err=True)
     solution = day_functions[day](data)
-    print(solution)
+    click.echo(solution)
 
 
 if __name__ == "__main__":
