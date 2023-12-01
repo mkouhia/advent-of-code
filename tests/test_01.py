@@ -1,0 +1,19 @@
+import pytest
+from advent_of_code_2023.day01 import calibrate_document, calibration_value
+
+
+@pytest.mark.parametrize(
+    "line, value",
+    [("1abc2", 12), ("pqr3stu8vwx", 38), ("a1b2c3d4e5f", 15), ("treb7uchet", 77)],
+)
+def test_calibration_value(line: str, value: int):
+    assert calibration_value(line) == value
+
+
+def test_calibrate_document():
+    test_content = """1abc2
+pqr3stu8vwx
+a1b2c3d4e5f
+treb7uchet
+"""
+    assert calibrate_document(test_content) == 142
