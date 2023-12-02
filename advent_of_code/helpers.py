@@ -1,3 +1,5 @@
+"""Helper functions for Advent of Code."""
+
 from pathlib import Path
 
 import requests
@@ -16,17 +18,17 @@ def get_data(year: int, day: int) -> str:
     cache_file = _get_cache_dir(day=day, year=year) / "input"
     if not cache_file.exists():
         text = _get_data_online(year=year, day=day)
-        cache_file.write_text(text)
+        cache_file.write_text(text, encoding="utf-8")
         return text
 
-    return cache_file.read_text()
+    return cache_file.read_text(encoding="utf-8")
 
 
 def _get_data_online(year: int, day: int) -> str:
     """Download input file from Advent of Code."""
     session_id = _get_session_id()
-    uri = "http://adventofcode.com/{year}/day/{day}/input".format(year=year, day=day)
-    response = requests.get(uri, cookies={"session": session_id})
+    uri = f"http://adventofcode.com/{year}/day/{day}/input"
+    response = requests.get(uri, cookies={"session": session_id}, timeout=5)
     return response.text
 
 
@@ -48,4 +50,4 @@ def _get_session_id() -> str:
     if not dotfile.exists():
         raise UserWarning("Session ID not found in file .aoc_session_id")
 
-    return dotfile.read_text().strip("\n")
+    return dotfile.read_text(encoding="utf-8").strip("\n")

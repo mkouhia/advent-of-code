@@ -4,6 +4,9 @@ from ..base import Puzzle
 
 
 class Trebuchet(Puzzle):
+
+    """Elf trebuchet calibration."""
+
     _spelled_digits = {
         "one": "1",
         "two": "2",
@@ -37,9 +40,9 @@ class Trebuchet(Puzzle):
             )
         )
 
+    @staticmethod
     def _first_digit(string_: str, spelled_digits) -> str:
-        for i in range(len(string_)):
-            char_ = string_[i]
+        for i, char_ in enumerate(string_):
             if char_ in "0123456789":
                 return char_
             if spelled_digits is None:
@@ -47,6 +50,7 @@ class Trebuchet(Puzzle):
             for key in spelled_digits:
                 if string_[i : i + len(key)] == key:
                     return spelled_digits[key]
+        return ""
 
     def part1(self) -> int:
         """Return sum of calibration values for each row."""

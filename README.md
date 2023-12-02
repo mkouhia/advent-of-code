@@ -4,7 +4,7 @@ This repository contains my solutions to [Advent of Code](https://adventofcode.c
 
 ## Development
 
-Upon new puzzle:
+Upon a new puzzle:
 
 - Create new file in `advent_of_code/y{year}/day{day}.py` for implementing solution. Derive puzzle solution class from `base::Puzzle`.
 - Create test cases in `tests/y{year}/test_day{day}.py` for test driven development
@@ -13,7 +13,7 @@ Upon new puzzle:
 
 ### Running implemented solution against Advent of Code personal inputs
 
-Run the developed method with `python advent_of_code run [--day DAY]`.
+Run the developed method with `python -m advent_of_code run [--day DAY]`.
 
 This will first download personal puzzle input file from the Advent of Code site and store it in local cache.
 For downloading to work, get session ID from the Advent of Code cookie from your browser.

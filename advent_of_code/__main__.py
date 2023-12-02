@@ -22,7 +22,8 @@ _today = default = datetime.date.today()
 @click.group()
 @click.version_option(__version__)
 def cli():
-    pass
+    """Advent of Code solution command line interface."""
+    return
 
 
 @cli.command()
@@ -42,7 +43,7 @@ def cli():
     "--part",
     type=click.IntRange(min=1, max=2),
     default=1,
-    help=f"Puzzle part. Default: 1.",
+    help="Puzzle part. Default: 1.",
 )
 def run(year: int, day: int, part: int):
     """Run developed functions on Advent of Code data."""
@@ -61,19 +62,20 @@ def run(year: int, day: int, part: int):
         click.echo(err, err=True)
 
     solution = (
-        day_functions[day](data).part1() if part == 1
+        day_functions[day](data).part1()
+        if part == 1
         else day_functions[day](data).part2()
     )
 
     click.echo(solution)
 
 
-@cli.command
-def list():
+@cli.command(name="list")
+def list_puzzles():
     """List all puzzle solutions."""
-    for year in _functions:
+    for year, func_dict in _functions.items():
         click.echo(f"# {year}")
-        for day, cls_ in _functions[year].items():
+        for day, cls_ in func_dict.items():
             click.echo(f"{day:2d} {cls_.__name__}")
 
 
