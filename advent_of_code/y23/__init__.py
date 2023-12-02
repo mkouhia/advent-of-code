@@ -2,7 +2,9 @@
 
 from ..base import Puzzle
 from .day01 import Trebuchet
+from .day02 import CubeConundrum
 
-solutions_23: dict[int, Puzzle] = {
+solutions: dict[int, Puzzle] = {
     1: Trebuchet,
+    2: CubeConundrum,
 }
