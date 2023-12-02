@@ -39,7 +39,13 @@ def cli():
     default=_today.year,
     help=f"Event year. Default: this year ({_today.year}).",
 )
-def run(year: int, day: int):
+@click.option(
+    "--part",
+    type=click.IntRange(min=1, max=2),
+    default=1,
+    help=f"Puzzle part. Default: 1.",
+)
+def run(year: int, day: int, part: int):
     """Run developed functions on Advent of Code data."""
     if year not in _functions:
         click.echo(f"Year {year}: not implemented", err=True)
@@ -55,7 +61,14 @@ def run(year: int, day: int):
     except UserWarning as err:
         click.echo(err, err=True)
 
-    solution = day_functions[day].solve(data)
+    match part:
+        case 1:
+            solution = day_functions[day].part1(data)
+        case 2:
+            solution = day_functions[day].part2(data)
+        case _:
+            click.echo("")
+
     click.echo(solution)
 
 

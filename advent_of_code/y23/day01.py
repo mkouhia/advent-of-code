@@ -18,16 +18,23 @@ class Trebuchet(Puzzle):
     _reverse_digits = {key[::-1]: val for key, val in _spelled_digits.items()}
 
     @classmethod
-    def calibration_value(cls, line: str) -> int:
+    def calibration_value(cls, line: str, use_spelled_digits=False) -> int:
         """Generate calibration value.
+
+        Args:
+            line: Input text, for which to generate calibration value.
+            use_spelled_digits: Handle texts such as 'zero', 'one', ...,
+              'nine' as digits.
 
         On each line, the calibration value can be found by combining
         the first digit and the last digit (in that order) to form a single
         two-digit number.
         """
         return int(
-            _first_digit(line, cls._spelled_digits)
-            + _first_digit(line[::-1], cls._reverse_digits)
+            cls._first_digit(line, cls._spelled_digits if use_spelled_digits else None)
+            + cls._first_digit(
+                line[::-1], cls._reverse_digits if use_spelled_digits else None
+            )
         )
 
     def _first_digit(string_: str, spelled_digits) -> str:
@@ -35,39 +42,24 @@ class Trebuchet(Puzzle):
             char_ = string_[i]
             if char_ in "0123456789":
                 return char_
+            if spelled_digits is None:
+                continue
             for key in spelled_digits:
                 if string_[i : i + len(key)] == key:
                     return spelled_digits[key]
 
     @classmethod
-    def solve(cls, document: str) -> int:
+    def part1(cls, document: str) -> int:
         """Return sum of calibration values for each row."""
-        return sum(calibration_value(i) for i in document.splitlines())
+        return sum(
+            cls.calibration_value(i, use_spelled_digits=False)
+            for i in document.splitlines()
+        )
 
-
-def calibration_value(line: str) -> int:
-    return Trebuchet.calibration_value(line)
-    """Generate calibration value.
-
-    On each line, the calibration value can be found by combining
-    the first digit and the last digit (in that order) to form a single
-    two-digit number.
-    """
-    return int(
-        _first_digit(line, _spelled_digits) + _first_digit(line[::-1], _reverse_digits)
-    )
-
-
-def _first_digit(string_: str, spelled_digits) -> str:
-    for i in range(len(string_)):
-        char_ = string_[i]
-        if char_ in "0123456789":
-            return char_
-        for key in spelled_digits:
-            if string_[i : i + len(key)] == key:
-                return spelled_digits[key]
-
-
-def calibrate_document(document: str) -> int:
-    """Return sum of calibration values for each row."""
-    return sum(calibration_value(i) for i in document.splitlines())
+    @classmethod
+    def part2(cls, document: str) -> int:
+        """Return sum of calibration values for each row."""
+        return sum(
+            cls.calibration_value(i, use_spelled_digits=True)
+            for i in document.splitlines()
+        )

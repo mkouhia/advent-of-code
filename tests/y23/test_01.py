@@ -19,7 +19,7 @@ from advent_of_code.y23.day01 import Trebuchet
     ],
 )
 def test_calibration_value(line: str, value: int):
-    assert Trebuchet.calibration_value(line) == value
+    assert Trebuchet.calibration_value(line, use_spelled_digits=True) == value
 
 
 def test_calibrate_document():
@@ -28,4 +28,4 @@ pqr3stu8vwx
 a1b2c3d4e5f
 treb7uchet
 """
-    assert Trebuchet.solve(test_content) == 142
+    assert Trebuchet.part1(test_content) == 142
