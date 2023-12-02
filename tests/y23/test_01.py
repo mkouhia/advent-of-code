@@ -1,5 +1,5 @@
 import pytest
-from advent_of_code.y23.day01 import calibrate_document, calibration_value
+from advent_of_code.y23.day01 import Trebuchet
 
 
 @pytest.mark.parametrize(
@@ -19,7 +19,7 @@ from advent_of_code.y23.day01 import calibrate_document, calibration_value
     ],
 )
 def test_calibration_value(line: str, value: int):
-    assert calibration_value(line) == value
+    assert Trebuchet.calibration_value(line) == value
 
 
 def test_calibrate_document():
@@ -28,4 +28,4 @@ pqr3stu8vwx
 a1b2c3d4e5f
 treb7uchet
 """
-    assert calibrate_document(test_content) == 142
+    assert Trebuchet.solve(test_content) == 142

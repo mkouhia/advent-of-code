@@ -48,4 +48,4 @@ def _get_session_id() -> str:
     if not dotfile.exists():
         raise UserWarning("Session ID not found in file .aoc_session_id")
 
-    return dotfile.read_text()
+    return dotfile.read_text().strip("\n")

@@ -1,7 +1,8 @@
 """Functions for Advent of Code 2023."""
 
-from .day01 import calibrate_document
+from ..base import Puzzle
+from .day01 import Trebuchet
 
-_day_functions = {
-    1: calibrate_document,
+solutions_23: dict[int, Puzzle] = {
+    1: Trebuchet,
 }
