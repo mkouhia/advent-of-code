@@ -1,17 +1,20 @@
 """Abstract base class for a day's advent calendar solution."""
 
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractmethod
 
 
 class Puzzle(ABC):
     """Base class for puzzle solutions."""
+    
+    def __init__(self, input_text: str) -> None:
+        self.input_text = input_text
 
-    @abstractclassmethod
-    def part1(cls, input_text: str) -> str | int:
+    @abstractmethod
+    def part1(self) -> str | int:
         """Returns puzzle solution to part 1."""
         ...
 
-    @abstractclassmethod
-    def part2(cls, input_text: str) -> str | int:
+    @abstractmethod
+    def part2(self) -> str | int:
         """Returns puzzle solution to part 1."""
         ...

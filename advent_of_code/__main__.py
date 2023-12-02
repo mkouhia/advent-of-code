@@ -8,7 +8,6 @@ import click
 
 from . import __version__
 from .helpers import get_data
-from .base import Puzzle
 
 from .y23 import solutions as solutions_23
 
@@ -61,13 +60,10 @@ def run(year: int, day: int, part: int):
     except UserWarning as err:
         click.echo(err, err=True)
 
-    match part:
-        case 1:
-            solution = day_functions[day].part1(data)
-        case 2:
-            solution = day_functions[day].part2(data)
-        case _:
-            click.echo("")
+    solution = (
+        day_functions[day](data).part1() if part == 1
+        else day_functions[day](data).part2()
+    )
 
     click.echo(solution)
 

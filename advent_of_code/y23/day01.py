@@ -48,18 +48,16 @@ class Trebuchet(Puzzle):
                 if string_[i : i + len(key)] == key:
                     return spelled_digits[key]
 
-    @classmethod
-    def part1(cls, document: str) -> int:
+    def part1(self) -> int:
         """Return sum of calibration values for each row."""
         return sum(
-            cls.calibration_value(i, use_spelled_digits=False)
-            for i in document.splitlines()
+            self.calibration_value(i, use_spelled_digits=False)
+            for i in self.input_text.splitlines()
         )
 
-    @classmethod
-    def part2(cls, document: str) -> int:
+    def part2(self) -> int:
         """Return sum of calibration values for each row."""
         return sum(
-            cls.calibration_value(i, use_spelled_digits=True)
-            for i in document.splitlines()
+            self.calibration_value(i, use_spelled_digits=True)
+            for i in self.input_text.splitlines()
         )

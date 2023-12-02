@@ -41,7 +41,7 @@ def test_possible(i: int, sample_games: str):
 
 
 def test_sample(sample_games):
-    assert CubeConundrum.part1(sample_games) == 8
+    assert CubeConundrum(sample_games).part1() == 8
 
 
 @pytest.mark.parametrize("i", [0, 1])
@@ -64,4 +64,4 @@ def test_power(i: int, sample_games: str):
 
 
 def test_part2(sample_games: str):
-    assert CubeConundrum.part2(sample_games) == 2286
+    assert CubeConundrum(sample_games).part2() == 2286

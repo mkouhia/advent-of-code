@@ -9,17 +9,15 @@ from ..base import Puzzle
 class CubeConundrum(Puzzle):
 
     """Analyze game statistics, return possible games."""
-
-    @classmethod
-    def part1(cls, input_text: str) -> str:
+    
+    def part1(self) -> str:
         """Returns the sum of IDs for games that were possible."""
-        games = cls.parse_games(input_text)
+        games = self.parse_games(self.input_text)
         return sum(g.id for g in games if g.is_possible(red=12, green=13, blue=14))
 
-    @classmethod
-    def part2(cls, input_text: str) -> str:
+    def part2(self) -> str:
         """Returns the sum of power of cube sets."""
-        games = cls.parse_games(input_text)
+        games = self.parse_games(self.input_text)
         return sum(g.minimum_cubes().power() for g in games)
 
     @staticmethod

@@ -28,4 +28,4 @@ pqr3stu8vwx
 a1b2c3d4e5f
 treb7uchet
 """
-    assert Trebuchet.part1(test_content) == 142
+    assert Trebuchet(test_content).part1() == 142
