@@ -7,6 +7,11 @@ class Puzzle(ABC):
     """Base class for puzzle solutions."""
 
     @abstractclassmethod
-    def solve(cls, input_text: str) -> str:
-        """Returns puzzle solution, given a certain input text."""
+    def part1(cls, input_text: str) -> str | int:
+        """Returns puzzle solution to part 1."""
+        ...
+
+    @abstractclassmethod
+    def part2(cls, input_text: str) -> str | int:
+        """Returns puzzle solution to part 1."""
         ...
