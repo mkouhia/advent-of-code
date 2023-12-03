@@ -24,7 +24,7 @@ def gear_ratios(sample_input) -> GearRatios:
 
 
 def test_extract_numbers(gear_ratios):
-    extracted = gear_ratios.extract_numbers()
+    extracted = gear_ratios._extract_numbers()
     assert extracted.get((0, 0, 3)) == 467
     assert len(extracted) == 10
 
@@ -37,21 +37,5 @@ def test_part1(sample_input: str):
     assert GearRatios(sample_input).part1() == 4361
 
 
-def test_part12():
-    sample_input = """467..114..
-...*.....
-..35..633
-......#..
-617*.....
-.....+.58
-..592....
-......755
-...$.*...
-.664.598.
-"""
-    assert GearRatios(sample_input).part1() == 4361
-
-
-@pytest.mark.skip
 def test_part2(sample_input: str):
-    assert GearRatios(sample_input).part2() == ...
+    assert GearRatios(sample_input).part2() == 467835
