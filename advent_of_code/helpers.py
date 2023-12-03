@@ -3,6 +3,13 @@
 from pathlib import Path
 
 import requests
+import numpy as np
+
+
+def to_numpy_array(data: str) -> np.ndarray:
+    """Read fixed-width text string to Numpy array."""
+    nparr = np.array(data.split("\n"), dtype="str")
+    return nparr.view("U1").reshape((nparr.size, -1))
 
 
 def get_data(year: int, day: int) -> str:
