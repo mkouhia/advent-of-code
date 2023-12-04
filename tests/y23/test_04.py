@@ -14,11 +14,9 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
 """
 
 
-# @pytest.mark.skip
 def test_part1(sample_input: str):
     assert ScratchCards(sample_input).part1() == 13
 
 
-@pytest.mark.skip
 def test_part2(sample_input: str):
-    assert ScratchCards(sample_input).part2() == ...
+    assert ScratchCards(sample_input).part2() == 30
