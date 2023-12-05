@@ -9,10 +9,12 @@ import click
 from . import __version__
 from .helpers import get_data, create_new_template
 
+from .y21 import solutions as solutions_21
 from .y23 import solutions as solutions_23
 
 
 _functions = {
+    2021: solutions_21,
     2023: solutions_23,
 }
 
