@@ -73,6 +73,11 @@ def test_part1(sample_input: str):
     assert Almanac(sample_input).part1() == 35
 
 
-@pytest.mark.skip
 def test_part2(sample_input: str):
-    assert Almanac(sample_input).part2() == ...
+    assert Almanac(sample_input).part2() == 46
+
+
+def test_ranges(sample_input: str):
+    almanac_map = Almanac(sample_input).maps[0]
+    res = almanac_map.get_destination_ranged((79, 14), (55, 13))
+    assert list(res) == [(81, 14), (57, 13)]

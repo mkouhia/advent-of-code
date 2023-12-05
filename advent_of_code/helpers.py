@@ -12,6 +12,44 @@ def to_numpy_array(data: str) -> np.ndarray:
     return nparr.view("U1").reshape((nparr.size, -1))
 
 
+def partition_range(
+    source: tuple[int, int], partition_with: tuple[int, int]
+) -> tuple[tuple[int, int], tuple[int, int], tuple[int, int]]:
+    """Partition source range with another range.
+
+    Example:
+                    5       9     12    15
+    source                  [------------)
+    partition_with  [--------------)
+
+        partition_range(source=(9,15), partition_with=(5,12))
+        >>> (None, (9, 12), (12, 15))
+
+    Args:
+        source: Range to be partitioned, (start, end).
+        partition_with: Range, with which to partition the first.
+
+    Returns:
+        Three ranges related to the original: before, overlap, after. If some
+        range is not present (e.g. partitioning does not result in range before
+        partitionining range), the particular tuple will be None.
+    """
+    if source[1] < partition_with[0]:
+        return source, None, None
+
+    if partition_with[1] < source[0]:
+        return None, None, source
+
+    before = (source[0], partition_with[0]) if source[0] < partition_with[0] else None
+
+    after = (partition_with[1], source[1]) if partition_with[1] < source[1] else None
+
+    overlap_pts = (max(source[0], partition_with[0]), min(source[1], partition_with[1]))
+    overlap = overlap_pts if (overlap_pts[0] < overlap_pts[1]) else None
+
+    return before, overlap, after
+
+
 def get_data(year: int, day: int) -> str:
     """Get input data, either cached or downloaded.
 
