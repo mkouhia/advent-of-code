@@ -98,7 +98,7 @@ def new(year: int, day: int):
     dev, test = create_new_template(year, day)
     click.echo(f"- {dev}")
     click.echo(f"- {test}")
-    click.echo(f"Remember to add import into {dev.parent}/__init__.py")
+    click.echo(f"Remember to add import into {dev.parent /'__init__.py'}")
 
 
 if __name__ == "__main__":
