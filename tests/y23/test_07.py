@@ -28,6 +28,5 @@ def test_part1(sample_input: str):
     assert CamelCards(sample_input).part1() == 6440
 
 
-@pytest.mark.skip
 def test_part2(sample_input: str):
-    assert CamelCards(sample_input).part2() == ...
+    assert CamelCards(sample_input).part2() == 5905
