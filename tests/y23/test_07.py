@@ -15,7 +15,7 @@ QQQJA 483
 
 def test_sort(sample_input: str):
     cards = CamelCards(sample_input)
-    assert sorted(cards.hands, reverse=True) == [
+    assert cards.sorted_hands == [
         Hand("QQQJA", 483),
         Hand("T55J5", 684),
         Hand("KK677", 28),
