@@ -6,6 +6,7 @@ from .day02 import CubeConundrum
 from .day03 import GearRatios
 from .day04 import ScratchCards
 from .day05 import Almanac
+from .day07 import CamelCards
 
 
 solutions: dict[int, Puzzle] = {
@@ -14,4 +15,5 @@ solutions: dict[int, Puzzle] = {
     3: GearRatios,
     4: ScratchCards,
     5: Almanac,
+    7: CamelCards,
 }
