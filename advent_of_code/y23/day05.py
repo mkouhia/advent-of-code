@@ -1,9 +1,10 @@
 """https://adventofcode.com/2023/day/5"""
 
-import numpy as np
 from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import cached_property
+
+import numpy as np
 
 from ..base import Puzzle
 from ..helpers import partition_range
