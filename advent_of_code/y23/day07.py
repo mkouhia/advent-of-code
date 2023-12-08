@@ -36,12 +36,14 @@ class CamelCards(Puzzle):
         ]
 
     def set_joker_rule(self, mode: bool = True):
+        """Set joker rule to take effect."""
         self.joker_rule = mode
         self._card_order = self._card_order_rules["joker" if mode else "std"]
 
     @property
     def sorted_hands(self):
-        return sorted(self.hands, key=lambda hand: self.strength(hand), reverse=True)
+        """Get hands, in sorted order."""
+        return sorted(self.hands, key=self.strength, reverse=True)
 
     def strength(self, hand: Hand) -> tuple[int, int, int, int, int, int]:
         """Strength of a hand. Greater is better."""

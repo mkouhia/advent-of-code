@@ -55,12 +55,7 @@ class HauntedWasteland(Puzzle):
 
         for n in nodes_:
             directions = itertools.cycle(self.directions)
-            endpoints = []
-            start_ = n
-            for _ in range(2):
-                node_, count = self.get_iter_count(directions, start_, "..Z")
-                endpoints.append((node_, count))
-            assert endpoints[0] == endpoints[1], "No complex looping"
-            loops.append(endpoints[0][1])
+            _, count = self.get_iter_count(directions, n, "..Z")
+            loops.append(count)
 
         return math.lcm(*loops)
