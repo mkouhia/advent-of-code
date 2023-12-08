@@ -7,6 +7,7 @@ from .day03 import GearRatios
 from .day04 import ScratchCards
 from .day05 import Almanac
 from .day06 import WaitForIt
+from .day07 import CamelCards
 
 
 solutions: dict[int, Puzzle] = {
@@ -16,4 +17,5 @@ solutions: dict[int, Puzzle] = {
     4: ScratchCards,
     5: Almanac,
     6: WaitForIt,
+    7: CamelCards,
 }
