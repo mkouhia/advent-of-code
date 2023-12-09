@@ -9,6 +9,7 @@ from .day05 import Almanac
 from .day06 import WaitForIt
 from .day07 import CamelCards
 from .day08 import HauntedWasteland
+from .day09 import MirageMaintenance
 
 
 solutions: dict[int, Puzzle] = {
@@ -20,4 +21,5 @@ solutions: dict[int, Puzzle] = {
     6: WaitForIt,
     7: CamelCards,
     8: HauntedWasteland,
+    9: MirageMaintenance,
 }
