@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from advent_of_code.y21.day19 import BeaconScanner
@@ -143,14 +144,52 @@ def sample_input() -> str:
 30,-46,-14
 """
 
-def test_init(sample_input: str):
+def test_equal_beacons():
+    input_txt = """--- scanner 0 ---
+-618,-824,-621
+-537,-823,-458
+-447,-329,318
+404,-588,-901
+544,-627,-890
+528,-643,409
+-661,-816,-575
+390,-675,-793
+423,-701,434
+-345,-311,381
+459,-707,401
+-485,-357,347
+
+--- scanner 1 ---
+686,422,578
+605,423,415
+515,917,-361
+-336,658,858
+-476,619,847
+-460,603,-452
+729,430,532
+-322,571,750
+-355,545,-477
+413,935,-424
+-391,539,-444
+553,889,-390
+"""
+    b = BeaconScanner(input_txt)
+    matches = b.scanners[0].get_matches(b.scanners[1])
+    assert matches == {i:i for i in range(12)}
+
+
+@pytest.mark.parametrize("scanner, expected_loc", [
+    (1, [68,-1246,-43]),
+    (2, [1105,-1205,1229]),
+    (3, [-92,-2380,-20]),
+    (4, [-20,-1133,1061]),
+])
+def test_transforms(scanner: int, expected_loc: tuple, sample_input: str):
     b = BeaconScanner(sample_input)
-    print(b.scanners)
-    
-    assert False
+    transform = b.scanners[0]._beacon_transform(b.scanners[scanner], 12)
+    assert transform(np.array([[0,0,0]])).astype(int).tolist() == expected_loc
 
-
-@pytest.mark.skip
+# @pytest.mark.skip
 def test_part1(sample_input: str):
     assert BeaconScanner(sample_input).part1() == ...
 
