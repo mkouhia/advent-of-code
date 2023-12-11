@@ -1,3 +1,4 @@
+import itertools
 import pytest
 
 from advent_of_code.y21.day19 import BeaconScanner
@@ -143,6 +144,7 @@ def sample_input() -> str:
 30,-46,-14
 """
 
+
 @pytest.fixture
 def expected_s0():
     return """-618,-824,-621
@@ -157,6 +159,7 @@ def expected_s0():
 -345,-311,381
 459,-707,401
 -485,-357,347"""
+
 
 @pytest.fixture
 def expected_s1():
@@ -174,6 +177,16 @@ def expected_s1():
 553,889,-390
 """
 
+
+def test_num_beacons(sample_input: str):
+    b = BeaconScanner(sample_input)
+    ids = list(b.scanners.keys())
+    comb = itertools.combinations(ids, 2)
+
+    for i0, i1 in comb:
+        print(i0, i1, len(b.scanners[i0].common_distances(b.scanners[i1])))
+
+
 def test_equal_beacons(expected_s0, expected_s1):
     input_txt = f"""--- scanner 0 ---
 {expected_s0}
@@ -188,21 +201,21 @@ def test_equal_beacons(expected_s0, expected_s1):
 
 def test_match(sample_input: str, expected_s0):
     expected_beacons = {
-        tuple(map(int, row.split(',')))
-        for row in expected_s0.strip().splitlines()
+        tuple(map(int, row.split(","))) for row in expected_s0.strip().splitlines()
     }
-    
+
     b = BeaconScanner(sample_input)
-        
+
     _, _, common_beacons = b.scanners[0].get_transforms(b.scanners[1], min_matches=12)
-    
+
     assert common_beacons == expected_beacons
 
 
 def test_transforms(sample_input: str):
     b = BeaconScanner(sample_input)
     _, shift_vec, _ = b.scanners[0].get_transforms(b.scanners[1])
-    assert shift_vec.tolist() == [68,-1246,-43]
+    assert shift_vec.tolist() == [68, -1246, -43]
+
 
 def test_part1(sample_input: str):
     assert BeaconScanner(sample_input).part1() == 79
