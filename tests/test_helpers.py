@@ -3,7 +3,36 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from advent_of_code.helpers import char_array_to_string, to_numpy_array, partition_range
+from advent_of_code.helpers import (
+    TermColour,
+    char_array_to_string,
+    highlight_by_pos,
+    highlight_regex,
+    to_numpy_array,
+    partition_range,
+)
+
+
+def test_highlight_regex():
+    res = highlight_regex(
+        "a..#k", {"#": TermColour.OKGREEN, r"(\.)": TermColour.WARNING}
+    )
+    assert res == "a\x1b[93m.\x1b[0m\x1b[93m.\x1b[0m\x1b[92m#\x1b[0mk"
+
+
+def test_highlight_by_pos():
+    sample = """.....
+.S-7.
+.|.|.
+.L-J.
+....."""
+    res = highlight_by_pos(
+        sample, [(1, 1), (1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2), (3, 3)]
+    )
+    assert (
+        res
+        == ".....\n.\x1b[92mS\x1b[0m\x1b[92m-\x1b[0m\x1b[92m7\x1b[0m.\n.\x1b[92m|\x1b[0m.\x1b[92m|\x1b[0m.\n.\x1b[92mL\x1b[0m\x1b[92m-\x1b[0m\x1b[92mJ\x1b[0m.\n....."
+    )
 
 
 def test_to_numpy_array():
@@ -30,8 +59,8 @@ def test_numpy_array_text():
 ..........
 .......#..
 #...#....."""
-    arr = to_numpy_array(sample, 'S')
-    received = char_array_to_string(arr, encoding='ascii')
+    arr = to_numpy_array(sample, "S")
+    received = char_array_to_string(arr, encoding="ascii")
     assert received == sample
 
 
