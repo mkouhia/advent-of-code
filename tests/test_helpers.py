@@ -3,7 +3,7 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from advent_of_code.helpers import to_numpy_array, partition_range
+from advent_of_code.helpers import char_array_to_string, to_numpy_array, partition_range
 
 
 def test_to_numpy_array():
@@ -16,6 +16,23 @@ def test_to_numpy_array():
         dtype="U1",
     )
     assert_array_equal(to_numpy_array(input), expected)
+
+
+def test_numpy_array_text():
+    """See if text is same after numpy handling."""
+    sample = """...#......
+.......#..
+#.........
+..........
+......#...
+.#........
+.........#
+..........
+.......#..
+#...#....."""
+    arr = to_numpy_array(sample, 'S')
+    received = char_array_to_string(arr, encoding='ascii')
+    assert received == sample
 
 
 @pytest.mark.parametrize(

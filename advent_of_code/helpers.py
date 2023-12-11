@@ -6,10 +6,20 @@ import requests
 import numpy as np
 
 
-def to_numpy_array(data: str) -> np.ndarray:
-    """Read fixed-width text string to Numpy array."""
-    nparr = np.array(data.split("\n"), dtype="str")
-    return nparr.view("U1").reshape((nparr.size, -1))
+def to_numpy_array(data: str, dtype="U") -> np.ndarray:
+    """Read fixed-width text string to Numpy array.
+
+    Args:
+        dtype: Numpy short data type, 'S' or 'U'
+    """
+    nparr = np.array(data.split("\n"), dtype=dtype)
+    return nparr.view(f"{dtype}1").reshape((nparr.size, -1))
+
+
+def char_array_to_string(arr: np.ndarray, encoding="utf-8") -> str:
+    """Convert char array back to string."""
+    col = np.full((arr.shape[0], 1), "\n", dtype=arr.dtype)
+    return np.hstack((arr, col)).tobytes().decode(encoding).replace('\x00', '').strip()
 
 
 def partition_range(
