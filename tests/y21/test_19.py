@@ -1,6 +1,3 @@
-from io import StringIO
-
-import numpy as np
 import pytest
 
 from advent_of_code.y21.day19 import BeaconScanner
@@ -202,22 +199,14 @@ def test_match(sample_input: str, expected_s0):
     assert common_beacons == expected_beacons
 
 
-@pytest.mark.parametrize("scanner_id, expected_loc", [
-    (1, [68,-1246,-43]),
-    # (2, [1105,-1205,1229]),
-    # (3, [-92,-2380,-20]),
-    # (4, [-20,-1133,1061]),
-])
-def test_transforms(scanner_id: int, expected_loc: tuple, sample_input: str):
+def test_transforms(sample_input: str):
     b = BeaconScanner(sample_input)
-    _, shift_vec, _ = b.scanners[0].get_transforms(b.scanners[scanner_id], 12)
-    assert shift_vec.tolist() == expected_loc
+    _, shift_vec, _ = b.scanners[0].get_transforms(b.scanners[1])
+    assert shift_vec.tolist() == [68,-1246,-43]
 
-@pytest.mark.skip
 def test_part1(sample_input: str):
-    assert BeaconScanner(sample_input).part1() == ...
+    assert BeaconScanner(sample_input).part1() == 79
 
 
-@pytest.mark.skip
 def test_part2(sample_input: str):
-    assert BeaconScanner(sample_input).part2() == ...
+    assert BeaconScanner(sample_input).part2() == 3621

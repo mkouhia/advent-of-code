@@ -1,16 +1,14 @@
 """https://adventofcode.com/2021/day/19"""
 
 import itertools
-import math
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
-from functools import cached_property
 from io import StringIO
 from typing import Callable
 
 import numpy as np
-import open3d as o3d
+from tqdm import tqdm
 
 from ..base import Puzzle
 
@@ -38,7 +36,7 @@ class BeaconScanner(Puzzle):
         super().__init__(input_text)
         self.scanners: dict[int, Scanner] = {}
 
-        pattern = r'--- scanner (\d) ---\n((?:-?\d+,-?\d+,-?\d+\n)+)'
+        pattern = r'--- scanner (\d+) ---\n((?:-?\d+,-?\d+,-?\d+\n)+)'
         for scanner_s in re.findall(pattern, input_text):
             id_ = int(scanner_s[0])
             beacons = np.genfromtxt(StringIO(scanner_s[1]), delimiter=',', dtype=int)
@@ -46,13 +44,37 @@ class BeaconScanner(Puzzle):
             
     def find_matches(self):
         """Start from 0. Traverse forward, find matches. Transform back."""
-        ...
+        unmatched_scanners = self.scanners.copy()
+        scanner_0 = unmatched_scanners.pop(0)
+        
+        global_scanner = Scanner(-1, scanner_0.beacons)
+        
+        with tqdm(total=len(unmatched_scanners), desc="Matching  ") as pbar:
+            while len(unmatched_scanners) > 0:
+                id_ = next(iter(unmatched_scanners))
+                other = unmatched_scanners.pop(id_)
+                try:
+                    rotate_mat, shift_vec, _ = global_scanner.get_transforms(other)
+                    new_beacons = (other.beacons @ rotate_mat + shift_vec).astype(int)
+                    
+                    joined_beacons = np.unique(
+                        np.vstack([global_scanner.beacons, new_beacons]),
+                        axis=0
+                    )
+                    global_scanner = Scanner(-1, joined_beacons)
+                    pbar.update()
+                except UserWarning:
+                    unmatched_scanners[id_] = other # Put back
+                
+                
+        return global_scanner.beacons
 
     def part1(self) -> str | int:
-        return self.scanners[0].get_transforms(self.scanners[1])
+        return len(self.find_matches())
 
     def part2(self) -> str | int:
         return super().part2()
+
 
 @dataclass
 class Scanner:
@@ -62,12 +84,33 @@ class Scanner:
     def get_transforms(self, other: "Scanner", min_matches=12):
         """Match beacons by brute-force looping.
         
+        Go through all 24 possible rotations and all beacon combinations.
+
         Feature matching does not seem to work, since it seems there are
         so similar structures in the scopes.
+        
+        Args:
+            min_matches: Amount of common beacons that need to be found
+              for a transform to be accepted.
+              
+        Raises:
+            UserWarning if no matching transform is found.
+        
+        Returns:
+            - Rotation matrix: rotation that can be applied to other
+              beacons as 
+            - Shift vector: vector that should be added to
+            - Common beacons: set of tuples, containin common beacons in
+              coordinate space of this scanner.
+              
+            Coordinate transforms should be applied to the other beacons
+            as `(other.beacons @ rotate_mat + shift_vec).astype(int)` to
+            get beacons in the coordinate space of the first beacon.
+        
         """
         current_beacons = {tuple(self.beacons[i].tolist()) for i in range(len(self.beacons))}
         other_len = len(other.beacons)
-        for rotate_mat in rotations():
+        for rotate_mat in tqdm(rotations(), total=24, leave=False, desc=f'Scanner {other.id_:02}'):
             candidates = (other.beacons @ rotate_mat).astype(int)
             for b0, i1 in itertools.product(self.beacons, range(other_len)):
                 shift_vec = b0 - candidates[i1]
@@ -77,35 +120,6 @@ class Scanner:
                     return rotate_mat, shift_vec, common_beacons
         raise UserWarning("No transform found")
                 
-
-    def translate_beacons(self, other: "Scanner", min_matches=12):
-        """Translate beacons from other scanner to the same coordinates.
-
-        Detect same beacons based on FPFH features. Translate coordinates
-        of same beacons with least squares fit. Employ same transform to
-        translate all other beacons.
-
-        Args:
-            min_matches: If less than N common matches, do not transform.
-
-        Returns:
-            None if not enough matches, otherwise translated coordinates.
-        """
-        transform = self._beacon_transform(other, min_matches)
-        return transform(other.beacons)
-
-    def _beacon_transform(self, other, min_matches):
-        matches = self.get_transforms(other)
-        # print(matches)
-        if len(matches) < min_matches:
-            return None
-
-        source = other.beacons[list(matches.values())]
-        target = self.beacons[list(matches.keys())]
-        # print(source)
-        # print(target)
-        return least_squares_transform(source, target)
-
 
 def cosine_similarity(vec, mat2) -> np.ndarray:
     """Calculate cosine similarity between each column combinations between mat1 and mat2."""

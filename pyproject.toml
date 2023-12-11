@@ -10,6 +10,8 @@ click = "^8.1.7"
 requests = "^2.31.0"
 shapely = "^2.0.2"
 open3d-cpu = {url = "https://storage.googleapis.com/open3d-releases-master/python-wheels/open3d_cpu-0.17.0+2a11e0e-cp311-cp311-manylinux_2_27_x86_64.whl"}
+tqdm = "^4.66.1"
+numba = "^0.58.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
