@@ -1,5 +1,6 @@
 """https://adventofcode.com/2023/day/12"""
 
+import re
 import itertools
 from dataclasses import dataclass
 
@@ -32,6 +33,8 @@ class ConditionRecord:
     condition: np.array
     mask: np.array
     groups: list[int]
+    spec: str
+
 
     @classmethod
     def from_string(cls, spec: str):
@@ -40,7 +43,7 @@ class ConditionRecord:
         groups = [int(j) for j in parts[1].split(",")]
         condition = np.array([c == "#" for c in cond_str])
         mask = np.array([c == "?" for c in cond_str])
-        return cls(condition, mask, groups)
+        return cls(condition, mask, groups, spec)
 
     @staticmethod
     def expand_spec(spec: str):
@@ -51,7 +54,7 @@ class ConditionRecord:
     def from_string_part2(cls, spec: str):
         spec2 = cls.expand_spec(spec)
         return cls.from_string(spec2)
-
+    
     @property
     def is_valid(self):
         found_counts = [
@@ -60,6 +63,35 @@ class ConditionRecord:
             if k
         ]
         return found_counts == self.groups
+    
+    @staticmethod
+    def find_possible_locations(spec: str, length: int):
+        pattern = r'(?=((^|[\.\?])[\?#]{' + length + '}($|[\.\?])))'
+        for match in re.finditer(pattern, spec):
+            yield match.start(1), match.end(1)
+
+    @classmethod
+    def do_replacements(cls, spec: str, groups: list[int]) -> int:
+
+        longest_grp = max(groups)
+
+        if len(groups) == 1:
+            # Return number of possible placements for this item
+            return len(cls.find_possible_locations(spec, longest_grp))
+
+        split_idx = groups.index(longest_grp)
+
+        groups_before = groups[:split_idx]
+        groups_after = groups[split_idx+1:]
+
+        count = 0
+        for start, end in cls.find_possible_locations(spec, longest_grp):
+            # TODO find out if it is possible to create matches with this split
+            f_before = cls.do_replacements(spec[:start], groups_before) if groups_before else 1
+            f_after = cls.do_replacements(spec[end:], groups_after) if groups_after else 1
+            count += f_before * f_after
+
+        return count
 
     def n_replacements(self):
         num_unknown = np.sum(self.mask)
