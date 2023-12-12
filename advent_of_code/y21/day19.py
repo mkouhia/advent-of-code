@@ -121,6 +121,51 @@ class BeaconScanner(Puzzle):
         return super().part2()
 
 
+def common_subgraphs(common_dist: np.array, dist1: np.ndarray, dist2: np.ndarray):
+    # dist1_uq, cnt1 = np.unique(np.tril(dist1), return_counts=True)
+    # dist1_uq, cnt2 = np.unique(np.tril(dist2), return_counts=True)
+    
+    # Start from smallest distance (quite arbitrary)
+    min_dist = np.min(common_dist)
+    
+    # Check both orientations for the first edge
+    i1 = np.nonzero(dist1 == min_dist)[0][0]    
+    i2 = sorted(
+        [
+            (look_ahead(dist1, dist2, i1, i2_opt).size, i2_opt)
+            for p in [0, 1]
+            if (i2_opt := np.nonzero(dist2 == min_dist)[0][p]) is not None
+        ],
+        reverse = True
+    )[0][-1]
+
+    
+    visited = np.array([[],[]], dtype=int)
+    pending = np.array([[i1], [i2]])
+    
+    while pending.shape[1] > 0:
+        i1, i2 = pending[:, 0]
+
+        j_arr = look_ahead(dist1, dist2, i1, i2)
+        
+        visited = np.hstack((visited, pending[:, [0]]))
+        j_next = j_arr[:, ~np.isin(j_arr[0], visited[0])]
+
+        if j_next.shape[1] == 0:
+            # IF nothing more, just leave this branch
+            pending = pending[:, 1:]
+        else:
+            # FIXME also check that we do not add duplicates to pending queue
+            pending = np.hstack((pending[:, 1:], j_next))
+            
+    return visited
+        
+def look_ahead(dist1: np.ndarray, dist2: np.ndarray, node1: int, node2: int) -> np.ndarray:
+    """Return common indices of nodes """
+    common_distances, ind1, ind2 = np.intersect1d(dist1[node1], dist2[node2], return_indices=True)
+    cond = (common_distances > 0)
+    return np.vstack((ind1[cond], ind2[cond]))
+
 @dataclass
 class Scanner:
     id_: int
