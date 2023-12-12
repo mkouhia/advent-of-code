@@ -12,6 +12,7 @@ from .day08 import HauntedWasteland
 from .day09 import MirageMaintenance
 from .day10 import PipeMaze
 from .day11 import CosmicExpansion
+from .day12 import HotSprings
 
 
 solutions: dict[int, Puzzle] = {
@@ -26,4 +27,5 @@ solutions: dict[int, Puzzle] = {
     9: MirageMaintenance,
     10: PipeMaze,
     11: CosmicExpansion,
+    12: HotSprings,
 }
