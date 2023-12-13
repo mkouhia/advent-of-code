@@ -33,7 +33,8 @@ def sample_input() -> str:
         (".##.?#??.#.?# 2,1,1,1", 1),
         (".??????? 2,1", 10),
         (".????????. 2,1",  15),
-        (".?###.###. 3,3", 1)
+        (".?###.###. 3,3", 1),
+        (".??#??#??#??.#?.? 7,2", 1),
     ],
 )
 def test_n_replacements(spec, count):
@@ -76,6 +77,5 @@ def test_part1(sample_input: str):
     assert HotSprings(sample_input).part1() == 21
 
 
-@pytest.mark.skip
 def test_part2(sample_input: str):
     assert HotSprings(sample_input).part2() == 525152

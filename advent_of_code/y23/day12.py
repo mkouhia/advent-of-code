@@ -59,12 +59,6 @@ class ConditionRecord:
     
     @staticmethod
     def find_possible_locations(spec: str, length: int):
-        # for m in re.finditer(rf'(?=([^\.]{{{spring}}}[^#]))', condition):
-        #     i = m.span(1)[0]
-        #     print(i, condition[:i])
-        #     if '#' in condition[:i]:
-        #         break
-        #     yield m.start(1), m.end(1)#condition[i + spring + 1:]
         pattern = r'(?=[.\?]([\?#]{' + str(length) + r'})[.\?])'
         for match_ in re.finditer(pattern, spec):
             yield match_.start(1), match_.end(1)
@@ -75,7 +69,7 @@ class ConditionRecord:
     @classmethod
     def _do_replacements(cls, spec: str, groups: list[int]) -> int:
         if not groups:
-            return "#" not in spec
+            return 0 if "#" in spec else 1
         
         if (key := (spec, tuple(groups))) in cls.records:
             return cls.records[key]
@@ -93,10 +87,6 @@ class ConditionRecord:
         if spec_lengths == groups:
             return 1
 
-        if len(groups) == 1:
-            count = sum(1 for _ in cls.find_possible_locations(spec, longest_grp))
-            return count
-
         split_idx = groups.index(longest_grp)
 
         groups_before = groups[:split_idx]
@@ -105,16 +95,14 @@ class ConditionRecord:
 
         count = 0
         for start, end in cls.find_possible_locations(spec, longest_grp):
-            # Find out if it is possible to create matches with this split
             
-            
-            f_before = cls._do_replacements(spec[:start], groups_before)# if groups_before else 1
+            f_before = cls._do_replacements(spec[:start], groups_before)
             if f_before == 0:
                 continue
-            f_after = cls._do_replacements(spec[end:], groups_after)# if groups_after else 1
+            f_after = cls._do_replacements(spec[end:], groups_after)
             if f_after == 0:
                 continue
             count += f_before * f_after
-
+            
         cls.records[(spec, tuple(groups))] = count
         return count
