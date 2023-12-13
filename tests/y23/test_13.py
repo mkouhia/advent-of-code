@@ -22,6 +22,7 @@ def sample_input() -> str:
 #....#..#
 """
 
+
 s = """.##.##.##....
 #.######.##..
 ##......###..
@@ -38,11 +39,16 @@ s = """.##.##.##....
 .#..##..#....
 #.##..##.##.."""
 
+
 def test_part1(sample_input: str):
     assert PointOfIncidence(sample_input).part1() == 405
 
-@pytest.mark.parametrize('pattern, col, row', [
-    (""".##.##.##....
+
+@pytest.mark.parametrize(
+    "pattern, col, row",
+    [
+        (
+            """.##.##.##....
 #.######.##..
 ##......###..
 ...####......
@@ -56,13 +62,17 @@ def test_part1(sample_input: str):
 #.#.##.#.....
 ##..##..##.##
 .#..##..#....
-#.##..##.##..""", 12, 0)
-])
+#.##..##.##..""",
+            12,
+            0,
+        )
+    ],
+)
 def test_samples(pattern, col, row):
     p = Pattern(pattern)
-    assert p.mirror_col() == col
-    assert p.mirror_row() == row
+    assert p._mirror_col() == col
+    assert p._mirror_row() == row
 
-@pytest.mark.skip
+
 def test_part2(sample_input: str):
-    assert PointOfIncidence(sample_input).part2() == ...
+    assert PointOfIncidence(sample_input).part2() == 400
