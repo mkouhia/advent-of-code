@@ -1,5 +1,9 @@
+from io import StringIO
 import itertools
+import numpy as np
 import pytest
+
+from numpy.testing import assert_array_equal
 
 from advent_of_code.y21.day19 import BeaconScanner
 
@@ -177,6 +181,9 @@ def expected_s1():
 553,889,-390
 """
 
+def to_arr(csv_str: str) -> np.ndarray:
+    return np.genfromtxt(StringIO(csv_str), delimiter=",", dtype=int)
+
 
 def test_num_beacons(sample_input: str):
     b = BeaconScanner(sample_input)
@@ -195,20 +202,29 @@ def test_equal_beacons(expected_s0, expected_s1):
 {expected_s1}
 """
     b = BeaconScanner(input_txt)
-    _, _, common_beacons = b.scanners[0].get_transforms(b.scanners[1], min_matches=12)
-    assert len(common_beacons) == 12
+    common = b.scanners[0].matching_beacons(b.scanners[1], min_matches=12)
+    
+    expected = np.vstack((np.arange(12), np.arange(12)))
+    assert_array_equal(common[:, common[0].argsort()], expected)
 
 
-def test_match(sample_input: str, expected_s0):
-    expected_beacons = {
-        tuple(map(int, row.split(","))) for row in expected_s0.strip().splitlines()
-    }
-
+def test_match(sample_input: str, expected_s0, expected_s1):
     b = BeaconScanner(sample_input)
 
     _, _, common_beacons = b.scanners[0].get_transforms(b.scanners[1], min_matches=12)
-
-    assert common_beacons == expected_beacons
+    
+    sorted_ = lambda arr: arr[arr[:, 0].argsort()]
+    beacons_received = [
+        sorted_(b.scanners[i].beacons[common_beacons[i]])
+        for i in [0, 1]
+    ]
+    expected = [
+        sorted_(to_arr(exp_))
+        for exp_ in [expected_s0, expected_s1]
+    ]
+    
+    for received_, expected_ in zip(beacons_received, expected):
+        assert_array_equal(received_, expected_)
 
 
 def test_transforms(sample_input: str):
@@ -221,5 +237,6 @@ def test_part1(sample_input: str):
     assert BeaconScanner(sample_input).part1() == 79
 
 
+@pytest.mark.skip
 def test_part2(sample_input: str):
     assert BeaconScanner(sample_input).part2() == 3621

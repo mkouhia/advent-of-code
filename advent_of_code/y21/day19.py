@@ -121,50 +121,6 @@ class BeaconScanner(Puzzle):
         return super().part2()
 
 
-def common_subgraphs(common_dist: np.array, dist1: np.ndarray, dist2: np.ndarray):
-    # dist1_uq, cnt1 = np.unique(np.tril(dist1), return_counts=True)
-    # dist1_uq, cnt2 = np.unique(np.tril(dist2), return_counts=True)
-    
-    # Start from smallest distance (quite arbitrary)
-    min_dist = np.min(common_dist)
-    
-    # Check both orientations for the first edge
-    i1 = np.nonzero(dist1 == min_dist)[0][0]    
-    i2 = sorted(
-        [
-            (look_ahead(dist1, dist2, i1, i2_opt).size, i2_opt)
-            for p in [0, 1]
-            if (i2_opt := np.nonzero(dist2 == min_dist)[0][p]) is not None
-        ],
-        reverse = True
-    )[0][-1]
-
-    
-    visited = np.array([[],[]], dtype=int)
-    pending = np.array([[i1], [i2]])
-    
-    while pending.shape[1] > 0:
-        i1, i2 = pending[:, 0]
-
-        j_arr = look_ahead(dist1, dist2, i1, i2)
-        
-        visited = np.hstack((visited, pending[:, [0]]))
-        j_next = j_arr[:, ~np.isin(j_arr[0], visited[0])]
-
-        if j_next.shape[1] == 0:
-            # IF nothing more, just leave this branch
-            pending = pending[:, 1:]
-        else:
-            # FIXME also check that we do not add duplicates to pending queue
-            pending = np.hstack((pending[:, 1:], j_next))
-            
-    return visited
-        
-def look_ahead(dist1: np.ndarray, dist2: np.ndarray, node1: int, node2: int) -> np.ndarray:
-    """Return common indices of nodes """
-    common_distances, ind1, ind2 = np.intersect1d(dist1[node1], dist2[node2], return_indices=True)
-    cond = (common_distances > 0)
-    return np.vstack((ind1[cond], ind2[cond]))
 
 @dataclass
 class Scanner:
@@ -187,6 +143,18 @@ class Scanner:
 
         return ret
 
+    def matching_beacons(self, other: "Scanner", min_matches=12):
+        """Get indices of matching beacons.
+
+        Args:
+            other: Other beacon scanner.
+            min_matches: Number of beacons that must match. Defaults to 12.
+            
+        Returns:
+            Array (2 x N) containing matching beacon indices in scanners.
+        """
+        return common_subgraphs(self.distances, other.distances, min_matches)
+
     def get_transforms(self, other: "Scanner", min_matches=12):
         """Match beacons by brute-force looping.
 
@@ -206,32 +174,86 @@ class Scanner:
             - Rotation matrix: rotation that can be applied to other
               beacons as
             - Shift vector: vector that should be added to
-            - Common beacons: set of tuples, containin common beacons in
-              coordinate space of this scanner.
+            - Common beacons: Array (2 x N) containing matching beacon
+              indices in scanners.
+
 
             Coordinate transforms should be applied to the other beacons
             as `(other.beacons @ rotate_mat + shift_vec).astype(int)` to
             get beacons in the coordinate space of the first beacon.
 
         """
-        current_beacons = {
-            tuple(self.beacons[i].tolist()) for i in range(len(self.beacons))
-        }
-        other_len = len(other.beacons)
-        for rotate_mat in tqdm(
-            rotations(), total=24, leave=False, desc=f"Scanner {other.id_:02}"
-        ):
+        
+        matches = self.matching_beacons(other, min_matches)
+        i_this, i_other = matches[:, 0]
+        # TODO compare this looping to matching with lstsq
+        for rotate_mat in rotations():
             candidates = (other.beacons @ rotate_mat).astype(int)
-            for b0, i1 in itertools.product(self.beacons, range(other_len)):
-                shift_vec = b0 - candidates[i1]
-                other_tfm = candidates + shift_vec
-                other_beacons = {tuple(other_tfm[i].tolist()) for i in range(other_len)}
-                if (
-                    len(common_beacons := current_beacons.intersection(other_beacons))
-                    >= min_matches
-                ):
-                    return rotate_mat, shift_vec, common_beacons
+            
+            shift_vec = self.beacons[i_this] - candidates[i_other]
+            other_tfm = candidates + shift_vec
+            
+            if np.array_equal(self.beacons[matches[0]], other_tfm[matches[1]]):
+                # Rotation matches
+                return rotate_mat, shift_vec, matches
         raise UserWarning("No transform found")
+
+
+def common_subgraphs(dist1: np.ndarray, dist2: np.ndarray, min_matches: int):
+    """Find common subgraphs in graphs, based on node distances.
+    
+    Start looking from the edge with smallest length.
+    
+    Args:
+        dist1: Distance matrix between nodes in graph 1.
+        dist2: Distance matrix between nodes in graph 2.
+        min_matches: Amount of common edge lengths that need to be found
+            for a subgraph to be accepted as common.
+
+    Returns:
+        Array (2 x N) containing matching node indices in graphs.
+    """
+    common_dist = np.intersect1d(dist1, dist2)
+    
+    # TODO if shortest edge does not match, start looping
+    # Start from smallest distance (quite arbitrary)
+    min_dist = np.min(common_dist[common_dist > 0])
+    
+    # Check both orientations for the first edge
+    node1 = np.nonzero(dist1 == min_dist)[0][0]
+    
+    node2_opt = np.nonzero(dist2 == min_dist)[0]
+    node2 = node2_opt[0]
+    translation = match_nodes(dist1, dist2, node1, node2)
+    if translation.shape == (2, 1):
+        # It was the other direction
+        node2 = node2_opt[1]
+        translation = match_nodes(dist1, dist2, node1, node2)
+
+    if translation.shape < (2, min_matches - 1):
+        raise NotImplementedError(f"Subgraph does not have {min_matches} common nodes")
+    
+    return np.hstack((np.array([[node1], [node2]]), translation))
+
+        
+def match_nodes(dist1: np.ndarray, dist2: np.ndarray, node1: int, node2: int) -> np.ndarray:
+    """Return common indices of nodes, based on distances.
+    
+    Assume that node1 and node2 are the same nodes in both graphs.
+
+    Args:
+        dist1: Distance matrix between nodes in graph 1.
+        dist2: Distance matrix between nodes in graph 2.
+        node1: Index of node in distance matrix 1.
+        node2: Index of node in distance matrix 2.
+        
+    Returns:
+        Array (2 x N) containing matching node indices in both graphs,
+        matched by edge distances leaving nodes node1 and node2.
+    """
+    common_distances, ind1, ind2 = np.intersect1d(dist1[node1], dist2[node2], return_indices=True)
+    cond = (common_distances > 0)
+    return np.vstack((ind1[cond], ind2[cond]))
 
 
 def cosine_similarity(vec, mat2) -> np.ndarray:
