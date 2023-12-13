@@ -9,7 +9,6 @@ from io import StringIO
 from typing import Callable
 
 import numpy as np
-from tqdm import tqdm
 
 from ..base import Puzzle
 
@@ -44,6 +43,9 @@ class BeaconScanner(Puzzle):
             beacons = np.genfromtxt(StringIO(scanner_s[1]), delimiter=",", dtype=int)
             self.scanners[id_] = Scanner(id_, beacons)
 
+        self.rotations = {}
+        self.centers = {}
+
     def find_matches(self):
         """Start from 0. Traverse forward, find matches. Transform back."""
         unmatched_scanners = self.scanners.copy()
@@ -62,55 +64,56 @@ class BeaconScanner(Puzzle):
 
         min_matches = sum(1 for _ in itertools.combinations(range(12), 2))
 
-        with tqdm(total=len(unmatched_scanners), desc="Matching  ") as pbar:
-            while len(unmatched_scanners) > 0:
-                test_order = sorted(
-                    filter(
-                        lambda t: (
-                            t[0] in matched_scanners
-                            and t[1] not in matched_scanners
-                            and (t[0], t[1]) not in false_combos
-                        ),
-                        scanner_common,
+        while len(unmatched_scanners) > 0:
+            test_order = sorted(
+                filter(
+                    lambda t: (
+                        t[0] in matched_scanners
+                        and t[1] not in matched_scanners
+                        and (t[0], t[1]) not in false_combos
                     ),
-                    key=lambda t: t[-1],
-                    reverse=True,
-                )
-                try:
-                    test_next = next(iter(test_order))
-                except StopIteration:
-                    assert len(matched_scanners) == len(ids) + 1
-                    break
-                id_ = test_next[1]
-                other = unmatched_scanners.pop(id_)
+                    scanner_common,
+                ),
+                key=lambda t: t[-1],
+                reverse=True,
+            )
+            try:
+                test_next = next(iter(test_order))
+            except StopIteration:
+                assert len(matched_scanners) == len(ids) + 1
+                break
+            id_ = test_next[1]
+            other = unmatched_scanners.pop(id_)
 
-                if test_next[-1] < min_matches:
-                    # Reindex matches
-                    unmatched_scanners[id_] = other  # Put back
-                    scanner_common = [
-                        (
-                            i0,
-                            i1,
-                            len(global_scanner.common_distances(self.scanners[i1])),
-                        )
-                        for i0, i1 in itertools.combinations(
-                            [-1] + list(unmatched_scanners.keys()), 2
-                        )
-                    ]
-                    continue
-                try:
-                    rotate_mat, shift_vec, _ = global_scanner.get_transforms(other)
-                    new_beacons = (other.beacons @ rotate_mat + shift_vec).astype(int)
-
-                    joined_beacons = np.unique(
-                        np.vstack([global_scanner.beacons, new_beacons]), axis=0
+            if test_next[-1] < min_matches:
+                # Reindex matches
+                unmatched_scanners[id_] = other  # Put back
+                scanner_common = [
+                    (
+                        i0,
+                        i1,
+                        len(global_scanner.common_distances(self.scanners[i1])),
                     )
-                    global_scanner = Scanner(-1, joined_beacons)
-                    pbar.update()
-                    matched_scanners.append(id_)
-                except UserWarning:
-                    unmatched_scanners[id_] = other  # Put back
-                    false_combos.append((test_next[0], test_next[1]))
+                    for i0, i1 in itertools.combinations(
+                        [-1] + list(unmatched_scanners.keys()), 2
+                    )
+                ]
+                continue
+            try:
+                rotate_mat, shift_vec, _ = global_scanner.get_transforms(other)
+                new_beacons = (other.beacons @ rotate_mat + shift_vec).astype(int)
+
+                joined_beacons = np.unique(
+                    np.vstack([global_scanner.beacons, new_beacons]), axis=0
+                )
+                global_scanner = Scanner(-1, joined_beacons)
+
+                matched_scanners.append(id_)
+                self.rotations[id_] = rotate_mat
+                self.centers[id_] = shift_vec
+            except UserWarning:
+                unmatched_scanners[id_] = other  # Put back
+                false_combos.append((test_next[0], test_next[1]))
 
         return global_scanner.beacons
 
@@ -118,8 +121,12 @@ class BeaconScanner(Puzzle):
         return len(self.find_matches())
 
     def part2(self) -> str | int:
-        return super().part2()
-
+        self.find_matches()
+        dists = [
+            np.sum(np.abs(self.centers[i0] - self.centers[i1]))
+            for i0, i1 in itertools.combinations(list(self.centers.keys()), 2)
+        ]
+        return max(dists)
 
 
 @dataclass
@@ -149,7 +156,7 @@ class Scanner:
         Args:
             other: Other beacon scanner.
             min_matches: Number of beacons that must match. Defaults to 12.
-            
+
         Returns:
             Array (2 x N) containing matching beacon indices in scanners.
         """
@@ -183,16 +190,16 @@ class Scanner:
             get beacons in the coordinate space of the first beacon.
 
         """
-        
+
         matches = self.matching_beacons(other, min_matches)
         i_this, i_other = matches[:, 0]
         # TODO compare this looping to matching with lstsq
         for rotate_mat in rotations():
             candidates = (other.beacons @ rotate_mat).astype(int)
-            
+
             shift_vec = self.beacons[i_this] - candidates[i_other]
             other_tfm = candidates + shift_vec
-            
+
             if np.array_equal(self.beacons[matches[0]], other_tfm[matches[1]]):
                 # Rotation matches
                 return rotate_mat, shift_vec, matches
@@ -201,9 +208,9 @@ class Scanner:
 
 def common_subgraphs(dist1: np.ndarray, dist2: np.ndarray, min_matches: int):
     """Find common subgraphs in graphs, based on node distances.
-    
+
     Start looking from the edge with smallest length.
-    
+
     Args:
         dist1: Distance matrix between nodes in graph 1.
         dist2: Distance matrix between nodes in graph 2.
@@ -214,14 +221,14 @@ def common_subgraphs(dist1: np.ndarray, dist2: np.ndarray, min_matches: int):
         Array (2 x N) containing matching node indices in graphs.
     """
     common_dist = np.intersect1d(dist1, dist2)
-    
+
     # TODO if shortest edge does not match, start looping
     # Start from smallest distance (quite arbitrary)
     min_dist = np.min(common_dist[common_dist > 0])
-    
+
     # Check both orientations for the first edge
     node1 = np.nonzero(dist1 == min_dist)[0][0]
-    
+
     node2_opt = np.nonzero(dist2 == min_dist)[0]
     node2 = node2_opt[0]
     translation = match_nodes(dist1, dist2, node1, node2)
@@ -232,13 +239,15 @@ def common_subgraphs(dist1: np.ndarray, dist2: np.ndarray, min_matches: int):
 
     if translation.shape < (2, min_matches - 1):
         raise NotImplementedError(f"Subgraph does not have {min_matches} common nodes")
-    
+
     return np.hstack((np.array([[node1], [node2]]), translation))
 
-        
-def match_nodes(dist1: np.ndarray, dist2: np.ndarray, node1: int, node2: int) -> np.ndarray:
+
+def match_nodes(
+    dist1: np.ndarray, dist2: np.ndarray, node1: int, node2: int
+) -> np.ndarray:
     """Return common indices of nodes, based on distances.
-    
+
     Assume that node1 and node2 are the same nodes in both graphs.
 
     Args:
@@ -246,13 +255,15 @@ def match_nodes(dist1: np.ndarray, dist2: np.ndarray, node1: int, node2: int) ->
         dist2: Distance matrix between nodes in graph 2.
         node1: Index of node in distance matrix 1.
         node2: Index of node in distance matrix 2.
-        
+
     Returns:
         Array (2 x N) containing matching node indices in both graphs,
         matched by edge distances leaving nodes node1 and node2.
     """
-    common_distances, ind1, ind2 = np.intersect1d(dist1[node1], dist2[node2], return_indices=True)
-    cond = (common_distances > 0)
+    common_distances, ind1, ind2 = np.intersect1d(
+        dist1[node1], dist2[node2], return_indices=True
+    )
+    cond = common_distances > 0
     return np.vstack((ind1[cond], ind2[cond]))
 
 
