@@ -33,6 +33,9 @@ def angles(a, b, c):
 
 
 class BeaconScanner(Puzzle):
+
+    """Register mixed point measurements to one coordinate space."""
+
     def __init__(self, input_text: str) -> None:
         super().__init__(input_text)
         self.scanners: dict[int, Scanner] = {}
@@ -50,70 +53,47 @@ class BeaconScanner(Puzzle):
         """Start from 0. Traverse forward, find matches. Transform back."""
         unmatched_scanners = self.scanners.copy()
         scanner_0 = unmatched_scanners.pop(0)
-
         global_scanner = Scanner(-1, scanner_0.beacons)
+        matched_scanners = [0]
 
-        ids = list(self.scanners.keys())
-        scanner_common = [
-            (i0, i1, len(self.scanners[i0].common_distances(self.scanners[i1])))
-            for i0, i1 in itertools.combinations(ids, 2)
-        ]
+        def scan_distances(scanner_list=None):
+            return iter(
+                sorted(
+                    [
+                        (i1, len(global_scanner.common_distances(self.scanners[i1])))
+                        for i1 in scanner_list
+                    ],
+                    key=lambda t: t[-1],
+                    reverse=True,
+                )
+            )
 
-        matched_scanners = [-1, 0]
-        false_combos = []
-
+        scanner_pairs = scan_distances([i for i in self.scanners if i != 0])
         min_matches = sum(1 for _ in itertools.combinations(range(12), 2))
 
         while len(unmatched_scanners) > 0:
-            test_order = sorted(
-                filter(
-                    lambda t: (
-                        t[0] in matched_scanners
-                        and t[1] not in matched_scanners
-                        and (t[0], t[1]) not in false_combos
-                    ),
-                    scanner_common,
-                ),
-                key=lambda t: t[-1],
-                reverse=True,
-            )
-            try:
-                test_next = next(iter(test_order))
-            except StopIteration:
-                assert len(matched_scanners) == len(ids) + 1
-                break
-            id_ = test_next[1]
-            other = unmatched_scanners.pop(id_)
-
-            if test_next[-1] < min_matches:
-                # Reindex matches
-                unmatched_scanners[id_] = other  # Put back
-                scanner_common = [
-                    (
-                        i0,
-                        i1,
-                        len(global_scanner.common_distances(self.scanners[i1])),
-                    )
-                    for i0, i1 in itertools.combinations(
-                        [-1] + list(unmatched_scanners.keys()), 2
-                    )
-                ]
+            i1, n_matches = next(scanner_pairs)
+            other = unmatched_scanners.pop(i1)
+            if n_matches < min_matches:
+                # Do reindexing
+                unmatched_scanners[i1] = other  # Put back
+                scanner_pairs = scan_distances(unmatched_scanners.keys())
                 continue
-            try:
-                rotate_mat, shift_vec, _ = global_scanner.get_transforms(other)
-                new_beacons = (other.beacons @ rotate_mat + shift_vec).astype(int)
 
-                joined_beacons = np.unique(
-                    np.vstack([global_scanner.beacons, new_beacons]), axis=0
-                )
-                global_scanner = Scanner(-1, joined_beacons)
+            if i1 in matched_scanners:
+                continue
 
-                matched_scanners.append(id_)
-                self.rotations[id_] = rotate_mat
-                self.centers[id_] = shift_vec
-            except UserWarning:
-                unmatched_scanners[id_] = other  # Put back
-                false_combos.append((test_next[0], test_next[1]))
+            rotate_mat, shift_vec, _ = global_scanner.get_transforms(other)
+            new_beacons = (other.beacons @ rotate_mat + shift_vec).astype(int)
+
+            joined_beacons = np.unique(
+                np.vstack([global_scanner.beacons, new_beacons]), axis=0
+            )
+            global_scanner = Scanner(-1, joined_beacons)
+
+            matched_scanners.append(i1)
+            self.rotations[i1] = rotate_mat
+            self.centers[i1] = shift_vec
 
         return global_scanner.beacons
 
@@ -131,6 +111,9 @@ class BeaconScanner(Puzzle):
 
 @dataclass
 class Scanner:
+
+    """Registered points in one field of view."""
+
     id_: int
     beacons: np.ndarray
 
@@ -193,7 +176,6 @@ class Scanner:
 
         matches = self.matching_beacons(other, min_matches)
         i_this, i_other = matches[:, 0]
-        # TODO compare this looping to matching with lstsq
         for rotate_mat in rotations():
             candidates = (other.beacons @ rotate_mat).astype(int)
 
@@ -222,7 +204,6 @@ def common_subgraphs(dist1: np.ndarray, dist2: np.ndarray, min_matches: int):
     """
     common_dist = np.intersect1d(dist1, dist2)
 
-    # TODO if shortest edge does not match, start looping
     # Start from smallest distance (quite arbitrary)
     min_dist = np.min(common_dist[common_dist > 0])
 
@@ -239,6 +220,7 @@ def common_subgraphs(dist1: np.ndarray, dist2: np.ndarray, min_matches: int):
 
     if translation.shape < (2, min_matches - 1):
         raise NotImplementedError(f"Subgraph does not have {min_matches} common nodes")
+        # If shortest edge does not match, try looping
 
     return np.hstack((np.array([[node1], [node2]]), translation))
 
