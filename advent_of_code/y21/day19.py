@@ -6,7 +6,6 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from io import StringIO
-from typing import Callable
 
 import numpy as np
 
@@ -14,6 +13,7 @@ from ..base import Puzzle
 
 
 def rotations() -> Iterable[np.ndarray]:
+    """Create all possible 24 matrix rotations."""
     for x, y, z in itertools.permutations([0, 1, 2]):
         for sx, sy, sz in itertools.product([-1, 1], repeat=3):
             rotation_matrix = np.zeros((3, 3))
@@ -22,14 +22,6 @@ def rotations() -> Iterable[np.ndarray]:
             rotation_matrix[2, z] = sz
             if np.linalg.det(rotation_matrix) == 1:
                 yield rotation_matrix
-
-
-def angles(a, b, c):
-    ba = a - b
-    bc = c - b
-
-    cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
-    return np.arccos(cosine_angle)
 
 
 class BeaconScanner(Puzzle):
@@ -247,39 +239,3 @@ def match_nodes(
     )
     cond = common_distances > 0
     return np.vstack((ind1[cond], ind2[cond]))
-
-
-def cosine_similarity(vec, mat2) -> np.ndarray:
-    """Calculate cosine similarity between each column combinations between mat1 and mat2."""
-    p1 = vec.dot(mat2)
-    p2 = np.linalg.norm(mat2, axis=0) * np.linalg.norm(vec)
-    return p1 / p2
-
-
-def least_squares_transform(
-    source: np.ndarray, target: np.ndarray
-) -> Callable[[np.ndarray], np.ndarray]:
-    """Create transformation from one coordinate space to another.
-
-    Args:
-        source: points in source coordinates.
-        target: points in target coordinates.
-
-    Returns:
-        Function, with which to transform any points in source coordinates
-        into target coordinates.
-    """
-
-    def pad(x):
-        return np.hstack([x, np.ones((x.shape[0], 1))])
-
-    # Pad the data with ones, so that our transformation can do translations too
-    X = pad(source)
-    Y = pad(target)
-
-    A, _, _, _ = np.linalg.lstsq(X, Y, rcond=None)
-
-    def translate(x):
-        return np.dot(pad(x), A)[:, :-1]
-
-    return translate
