@@ -3,6 +3,7 @@
 import re
 from collections.abc import Iterable
 from enum import Enum
+from typing import Callable
 
 import numpy as np
 
@@ -63,6 +64,58 @@ def char_array_to_string(arr: np.ndarray, encoding="utf-8") -> str:
     """Convert char array back to string."""
     col = np.full((arr.shape[0], 1), "\n", dtype=arr.dtype)
     return np.hstack((arr, col)).tobytes().decode(encoding).replace("\x00", "").strip()
+
+
+def point_angles(a, b, c):
+    """Calculate angle by points abc, where b is center point."""
+    ba = a - b
+    bc = c - b
+
+    cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
+    return np.arccos(cosine_angle)
+
+
+def cosine_similarity(vec: np.ndarray, mat2: np.ndarray) -> np.ndarray:
+    """Cosine similarity between vector and each column in mat1."""
+    p1 = vec.dot(mat2)
+    p2 = np.linalg.norm(mat2, axis=0) * np.linalg.norm(vec)
+    return p1 / p2
+
+
+def least_squares_transform(
+    source: np.ndarray,
+    target: np.ndarray,
+    shift=True,
+) -> Callable[[np.ndarray], np.ndarray]:
+    """Create transformation from one coordinate space to another.
+
+    Args:
+        source: points in source coordinates.
+        target: points in target coordinates.
+        shift: Allow translation? Default: True.
+
+    Returns:
+        Function, with which to transform any points in source coordinates
+        into target coordinates.
+    """
+
+    def pad(x):
+        """Add vector column of ones to the end."""
+        return np.hstack([x, np.ones((x.shape[0], 1))])
+
+    if shift:
+        # Add vector at the end, so also translations are possible
+        source = pad(source)
+        target = pad(target)
+
+    sol, _, _, _ = np.linalg.lstsq(source, target, rcond=None)
+
+    def translate(mat):
+        if shift:
+            return np.dot(pad(mat), sol)[:, :-1]
+        return np.dot(mat, sol)
+
+    return translate
 
 
 def partition_range(
