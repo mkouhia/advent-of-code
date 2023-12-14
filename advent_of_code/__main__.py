@@ -4,23 +4,37 @@ Run functions against downloaded input files.
 """
 
 import datetime
+import importlib
+import pyclbr
 import webbrowser
+from pathlib import Path
 
 import click
 
 from . import __version__
-from .helpers import get_data, create_new_template
+from .base import Puzzle
+from .util import get_data, create_new_template
 
-from .y21 import solutions as solutions_21
-from .y23 import solutions as solutions_23
-
-
-_functions = {
-    2021: solutions_21,
-    2023: solutions_23,
-}
 
 _today = default = datetime.date.today()
+
+
+def import_solution(year: int, day: int):
+    """Import puzzle class by year and day.
+
+    Raises:
+        ModuleNotFoundError: Module for day and year is not found.
+        UserWarning: Class that inherits Puzzle is not found in module.
+    """
+    module_name = f"advent_of_code.y{year - 2000}.day{day:02}"
+    day_module = importlib.import_module(module_name)
+
+    for name in pyclbr.readmodule(module_name):
+        cls_ = getattr(day_module, name)
+        if issubclass(cls_, Puzzle):
+            return cls_
+
+    raise UserWarning(f"No puzzle found in {module_name}")
 
 
 year_option = click.option(
@@ -55,36 +69,27 @@ def cli():
 )
 def run(year: int, day: int, part: int):
     """Run developed functions on Advent of Code data."""
-    if year not in _functions:
-        click.echo(f"Year {year}: not implemented", err=True)
-        return
-
-    day_functions = _functions[year]
-    if day not in day_functions:
-        click.echo(f"{year} day {day}: solution not implemented.", err=True)
-        return
-
     try:
+        puzzle_cls = import_solution(year, day)
         data = get_data(year=year, day=day)
-    except UserWarning as err:
-        click.echo(err, err=True)
+        puzzle = puzzle_cls(data)
+    except (ModuleNotFoundError, UserWarning) as err:
+        click.echo(str(err), err=True)
+        return
 
-    solution = (
-        day_functions[day](data).part1()
-        if part == 1
-        else day_functions[day](data).part2()
-    )
-
+    solution = puzzle.part1() if part == 1 else puzzle.part2()
     click.echo(solution)
 
 
 @cli.command(name="list")
 def list_puzzles():
     """List all puzzle solutions."""
-    for year, func_dict in _functions.items():
-        click.echo(f"# {year}")
-        for day, cls_ in func_dict.items():
-            click.echo(f"{day:2d} {cls_.__name__}")
+    module_ = pyclbr.readmodule_ex("advent_of_code")
+    mod_path = Path(module_["__path__"][0])
+    for child in sorted(
+        mod_path.rglob("y??/day??.py"), key=lambda p: p.parent.name + p.name
+    ):
+        print(child.relative_to(mod_path))
 
 
 @cli.command
@@ -96,7 +101,6 @@ def new(year: int, day: int):
     dev, test = create_new_template(year, day)
     click.echo(f"- {dev}")
     click.echo(f"- {test}")
-    click.echo(f"Remember to add import into {dev.parent /'__init__.py'}")
 
 
 @cli.command
