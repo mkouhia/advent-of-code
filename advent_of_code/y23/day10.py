@@ -8,6 +8,9 @@ from ..base import Puzzle
 
 
 class PipeMaze(Puzzle, Iterator):
+
+    """Maze that consists of ascii characters."""
+
     plumbing = ["|", "-", "L", "J", "7", "F"]
 
     possible_movements = {
@@ -60,9 +63,9 @@ class PipeMaze(Puzzle, Iterator):
 
     def _look_around(self):
         """Look for possible movements at start position."""
-        for next_delta in self.possible_movements:
-            next_y = self._pos[0] + next_delta[0]
-            next_x = self._pos[1] + next_delta[1]
+        for (dy, dx), allowed_dict in self.possible_movements.items():
+            next_y = self._pos[0] + dy
+            next_x = self._pos[1] + dx
             if (
                 next_y < 0
                 or next_y >= self.shape[0]
@@ -70,10 +73,9 @@ class PipeMaze(Puzzle, Iterator):
                 or next_x >= self.shape[1]
             ):
                 continue  # Not inside maze
-            allowed_chars = self.possible_movements[next_delta].keys()
-            if self.maze[next_y][next_x] in allowed_chars:
+            if self.maze[next_y][next_x] in allowed_dict:
                 # Go this way
-                return next_delta
+                return (dy, dx)
         raise UserWarning(f"Cannot go anywhere around {self._pos}")
 
     def part1(self) -> str | int:
@@ -86,7 +88,7 @@ class PipeMaze(Puzzle, Iterator):
         Employ Matplotlib functionality. Manual crossing count ended up
         too tedious.
 
-        See also https://stackoverflow.com/questions/36399381/whats-the-fastest-way-of-checking-if-a-point-is-inside-a-polygon-in-python
+        See also https://stackoverflow.com/q/36399381
         """
         edge_pts = list(self)
 
@@ -97,14 +99,7 @@ class PipeMaze(Puzzle, Iterator):
 
         points_within = 0
         for i in range(self.shape[0]):
-            edge_j = list(
-                sorted(
-                    map(
-                        lambda p: p[1],
-                        filter(lambda p: p[0] == i, edge_pts),
-                    )
-                )
-            )
+            edge_j = sorted(p[1] for p in edge_pts if p[0] == i)
 
             # Do not investigate points that are definitely not inside the polygon
             if len(edge_j) == 0:

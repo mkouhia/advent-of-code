@@ -45,6 +45,9 @@ class CosmicExpansion(Puzzle):
 
 @dataclass
 class Cosmos:
+
+    """Coordinate space containing galaxies."""
+
     galaxies: list[tuple[int, int]]
 
     def expand(self, rows, cols, factor=2) -> "Cosmos":

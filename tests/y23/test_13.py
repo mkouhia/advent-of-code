@@ -70,8 +70,8 @@ def test_part1(sample_input: str):
 )
 def test_samples(pattern, col, row):
     p = Pattern(pattern)
-    assert p._mirror_col() == col
-    assert p._mirror_row() == row
+    assert p.mirror_col() == col
+    assert p.mirror_row() == row
 
 
 def test_part2(sample_input: str):

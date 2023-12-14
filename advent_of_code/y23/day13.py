@@ -42,14 +42,16 @@ class Pattern:
         Assume that one pattern has either horizontal or vertical mirroring,
         not both.
         """
-        if val := self._mirror_row(num_faults):
+        if val := self.mirror_row(num_faults):
             return 100 * val
-        return self._mirror_col(num_faults)
+        return self.mirror_col(num_faults)
 
-    def _mirror_col(self, num_faults=0):
+    def mirror_col(self, num_faults=0):
+        """Returns column index, which defires mirrored image."""
         return mirror_point(self.col_strings, num_faults)
 
-    def _mirror_row(self, num_faults=0):
+    def mirror_row(self, num_faults=0):
+        """Returns row index, which defires mirrored image."""
         return mirror_point(self.row_strings, num_faults)
 
 
@@ -58,15 +60,15 @@ def mirror_point(elements: Iterable, num_faults=0):
     break_order = sorted(
         range(1, len(elements)), key=lambda k: abs(len(elements) / 2 - k)
     )
-    for breakpoint in break_order:
-        if _num_faults(elements, breakpoint) == num_faults:
-            return breakpoint
+    for idx in break_order:
+        if _num_faults(elements, idx) == num_faults:
+            return idx
     return 0
 
 
 def _num_faults(it: list[str], point: int) -> tuple[int, int]:
     """Number of faults in each mirrored pattern.
-    
+
     Args:
         it: List of strings to be matched.
         point: Index of mirroring point.

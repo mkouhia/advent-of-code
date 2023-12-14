@@ -32,7 +32,7 @@ def sample_input() -> str:
         ("..?###.????????. 3,2,1", 15),
         (".##.?#??.#.?# 2,1,1,1", 1),
         (".??????? 2,1", 10),
-        (".????????. 2,1",  15),
+        (".????????. 2,1", 15),
         (".?###.###. 3,3", 1),
         (".??#??#??#??.#?.? 7,2", 1),
     ],
@@ -40,6 +40,7 @@ def sample_input() -> str:
 def test_n_replacements(spec, count):
     record = ConditionRecord.from_string(spec)
     assert record.n_replacements() == count
+
 
 @pytest.mark.parametrize(
     "spec, count",
