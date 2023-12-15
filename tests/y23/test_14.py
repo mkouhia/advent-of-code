@@ -47,7 +47,10 @@ O..#.OO...
     ],
 )
 def test_pack_string(original, expected):
-    assert "".join(ParabolicReflectorDish.pack_string(original)) == expected
+    prd = ParabolicReflectorDish(original)
+    print(prd.movable.dtype)
+    assert False
+    assert prd.pack_west().pattern == expected
 
 
 @pytest.mark.parametrize(
@@ -60,15 +63,17 @@ def test_pack_string(original, expected):
     ],
 )
 def test_pack_reverse(original, expected):
-    assert (
-        "".join(ParabolicReflectorDish.pack_string(original, reverse=True)) == expected
-    )
+    prd = ParabolicReflectorDish(original)
+    assert prd.pack_east().pattern == expected
 
+def test_pattern(sample_input: str):
+    prd = ParabolicReflectorDish(sample_input)
+    assert prd.pattern == sample_input
 
 def test_pack_north(sample_input: str, sample_packed: str):
     prd = ParabolicReflectorDish(sample_input)
-    assert prd.pack_north().pattern == sample_packed
 
+    assert prd.pack_north().pattern == sample_packed
 
 def test_pack_twice(sample_input: str, sample_packed: str):
     prd = ParabolicReflectorDish(sample_input)
