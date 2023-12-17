@@ -20,13 +20,19 @@ class ClumsyCrucible(Puzzle):
 
     def part1(self) -> str | int:
         """Least heat loss on the crucible path."""
-        return self.search(start_node=(0,0))
+        return self.search_bfs(start_node=(0,0), max_leg=3)
 
     def part2(self) -> str | int:
-        return super().part2()
+        return self.search_bfs(start_node=(0,0), min_leg=4, max_leg=10)
 
-    def search(self, start_node: tuple[int, int]):
-        """Do a breadth-first search for the minimum distance."""
+    def search_bfs(self, start_node: tuple[int, int], min_leg=1, max_leg=3):
+        """Do a breadth-first search for the minimum distance.
+        
+        Heapq provides priority queue algorithm, which makes insertion
+        and taking smallest element quite cheap.
+        
+        https://docs.python.org/3/library/heapq.html
+        """
         # queue contains (dist, y, x, dy, dx) tuples
         queue_ = [(0, *start_node, 0, 0)]
         visited = set()
@@ -47,14 +53,20 @@ class ClumsyCrucible(Puzzle):
             for dy, dx in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
                 if (dy, dx) in [(dy_prev, dx_prev), (-dy_prev, -dx_prev)]:
                     continue
-                traveled = 0
-                for travel_length in range(1, 3+1):
+                traveled = dist
+                for travel_length in range(1, max_leg+1):
                     new_y = y + dy * travel_length
                     new_x = x + dx * travel_length
-                    if (
+
+                    if not (
                         (0 <= new_y <= self.shape[0] - 1)
                         and (0 <= new_x <= self.shape[1] - 1)
                     ):
-                        traveled += self.rows[new_y][new_x]
-                        # Add here and check visitedness when it comes up in the queue.
-                        heapq.heappush(queue_, (dist + traveled, new_y, new_x, dy, dx))
+                        break
+
+                    traveled += self.rows[new_y][new_x]
+                    if travel_length < min_leg:
+                        continue
+
+                    # Add here and check visitedness when it comes up in the queue.
+                    heapq.heappush(queue_, (traveled, new_y, new_x, dy, dx))

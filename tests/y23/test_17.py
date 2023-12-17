@@ -24,6 +24,5 @@ def test_part1(sample_input: str):
     assert ClumsyCrucible(sample_input).part1() == 102
 
 
-@pytest.mark.skip
 def test_part2(sample_input: str):
-    assert ClumsyCrucible(sample_input).part2() == ...
+    assert ClumsyCrucible(sample_input).part2() == 94
