@@ -2,9 +2,8 @@
 
 from collections.abc import Iterator
 
-import matplotlib.path
-
 from ..base import Puzzle
+from ..helpers import area_by_vertices
 
 
 class PipeMaze(Puzzle, Iterator):
@@ -83,36 +82,11 @@ class PipeMaze(Puzzle, Iterator):
         return len(list(self)) // 2
 
     def part2(self) -> str | int:
-        """Number of points inside this polygon.
-
-        Employ Matplotlib functionality. Manual crossing count ended up
-        too tedious.
-
-        See also https://stackoverflow.com/q/36399381
-        """
+        """Number of points inside this polygon."""
         edge_pts = list(self)
+        polygon = [p for p in edge_pts if self._char(*p) not in "-|"] + [edge_pts[0]]
 
-        polygon = matplotlib.path.Path(
-            [p for p in edge_pts if self._char(*p) not in "-|"] + [edge_pts[0]],
-            closed=True,
-        )
-
-        points_within = 0
-        for i in range(self.shape[0]):
-            edge_j = sorted(p[1] for p in edge_pts if p[0] == i)
-
-            # Do not investigate points that are definitely not inside the polygon
-            if len(edge_j) == 0:
-                continue
-
-            for j in range(min(edge_j), max(edge_j) + 1):
-                if (i, j) in edge_pts:
-                    continue
-
-                if polygon.contains_point((i, j)):
-                    points_within += 1
-
-        return points_within
+        return area_by_vertices(polygon, boundary=-1)
 
     def _char(self, i, j):
         return self.maze[i][j]

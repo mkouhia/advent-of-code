@@ -2,7 +2,9 @@
 
 from dataclasses import dataclass
 from enum import Enum
+
 from ..base import Puzzle
+from ..helpers import area_by_vertices
 
 
 class Direction(Enum):
@@ -51,32 +53,14 @@ class LavaductLagoon(Puzzle):
         last = self._points[-1]
         self._points.append((last[0] + dy * vertex.len, last[1] + dx * vertex.len))
 
-    def area(self, boundary=1):
-        """Returns area bound by vertices.
-
-        Employs Shoelace formula.
-        """
-        a = 0
-        ab = 0
-        y0, x0 = self.points[0]
-        for [y1, x1] in self.points[1:]:
-            dx = x1 - x0
-            dy = y1 - y0
-            a += 0.5 * (y0 * dx - x0 * dy)
-            if boundary:
-                ab += abs(dy) + abs(dx)
-            x0 = x1
-            y0 = y1
-        return int(a + (ab / 2 + 1 if boundary else 0))
-
     def part1(self) -> str | int:
         self.vertices = [
             Vertex.from_string(i) for i in self.input_text.strip().splitlines()
         ]
-        return self.area()
+        return area_by_vertices(self.points, boundary=1)
 
     def part2(self) -> str | int:
         self.vertices = [
             Vertex.from_string_hex(i) for i in self.input_text.strip().splitlines()
         ]
-        return self.area()
+        return area_by_vertices(self.points, boundary=1)

@@ -1,5 +1,6 @@
 """Helper functions for Advent of Code."""
 
+import itertools
 import re
 from collections.abc import Iterable
 from enum import Enum
@@ -67,6 +68,45 @@ def char_array_to_string(arr: np.ndarray, encoding="utf-8") -> str:
     """Convert char array back to string."""
     col = np.full((arr.shape[0], 1), "\n", dtype=arr.dtype)
     return np.hstack((arr, col)).tobytes().decode(encoding).replace("\x00", "").strip()
+
+
+def area_by_vertices(vertices: Iterable[int, int], boundary: int) -> float:
+    """Calculate polygon area with integer vertex coordinates.
+
+    Area within the area enclosed by vertices are calculated by the
+    Shoelace formula. In the Advent of Code puzzles, typically the vertices
+    are organized in an orthogonal grid, with boundary thickness=1; this
+    boundary is often included or excluded.
+
+    Args:
+        vertices: Iterable of (x, y) or (y, x) points.
+        boundary: Handling of the boundary. If `boundary==0`, return the
+          area from Shoelace formula directly. If `boundary==-1`, return
+          the area inside the boundary, not including the boundary itself.
+          If `boundary==1`, include the boundary thickness.
+
+    Returns:
+        Area, in vertex units.
+
+    https://en.wikipedia.org/wiki/Shoelace_formula
+    https://en.wikipedia.org/wiki/Pick%27s_theorem
+    """
+    pts = vertices
+    if vertices[-1] != vertices[0]:
+        pts.append(vertices[0])
+    area = 0
+    p_len = 0
+    for p0, p1 in itertools.pairwise(vertices):
+        area += (p0[0] + p1[0]) * (p0[1] - p1[1])
+        p_len += abs(p1[0] - p0[0]) + abs(p1[1] - p0[1])
+
+    area = abs(int(area * 0.5))
+
+    if not boundary:
+        return area
+    if boundary < 0:
+        return area - (p_len // 2) + 1
+    return area + (p_len // 2) + 1
 
 
 def point_angles(a, b, c):
