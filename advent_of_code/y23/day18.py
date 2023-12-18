@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from functools import cached_property
 from ..base import Puzzle
 
 
@@ -40,7 +39,7 @@ class LavaductLagoon(Puzzle):
         self._points = []
         self.vertices = []
 
-    @cached_property
+    @property
     def points(self):
         self._points = [(0, 0)]
         for v in self.vertices:
