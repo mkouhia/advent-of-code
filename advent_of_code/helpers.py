@@ -197,3 +197,55 @@ def partition_range(
     overlap = overlap_pts if (overlap_pts[0] < overlap_pts[1]) else None
 
     return before, overlap, after
+
+
+class ExtRange:
+
+    """Extended range."""
+
+    def __init__(self, *subranges):
+        self.subranges = []
+        for sub in subranges:
+            if isinstance(sub, range):
+                self.subranges.append(sub)
+            else:
+                self.subranges.append(range(*sub))
+
+    def __repr__(self) -> str:
+        return f'<Range({",".join(map(str, self.subranges))})>'
+
+    def simple_repr(self) -> str:
+        """Simple representation of ranges.
+
+        Ranges are converted to first:last, where both are inclusive. Single
+        element ranges are shown as one element.
+
+        Example:
+            >>> k = [-5, -4, 0, 1, 2, 4, 7, 8, 9, 11]
+            >>> ExtRange.from_int_list(k).simple_repr()
+            '-5:-4,0:2,4,7:9,11'
+        """
+
+        def str_sub(s: range):
+            return str(s.start) if s.start == s.stop - 1 else f"{s.start}:{s.stop-1}"
+
+        return ",".join(str_sub(s) for s in self.subranges)
+
+    @classmethod
+    def from_int_list(cls, int_list: list[int]) -> "ExtRange":
+        return cls(*cls.int_list_to_range_limits(int_list))
+
+    @staticmethod
+    def int_list_to_range_limits(int_list: list[int]) -> Iterable[tuple[int, int]]:
+        """Convert list of integers into [start, end) endpoints used in ranges.
+
+        Expect that input list is ordered.
+
+        Yields:
+            Tuples [start, end) for each subrange in input list.
+        """
+        for _, b in itertools.groupby(
+            enumerate(int_list), lambda pair: pair[1] - pair[0]
+        ):
+            b = list(b)
+            yield b[0][1], b[-1][1] + 1

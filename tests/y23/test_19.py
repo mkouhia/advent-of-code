@@ -1,7 +1,7 @@
 from functools import reduce
 import pytest
 
-from advent_of_code.y23.day19 import Aplenty, Part, PartRange, Workflow
+from advent_of_code.y23.day19 import Aplenty, Part, PartRange, Range, Workflow
 
 
 @pytest.fixture
@@ -37,13 +37,25 @@ def test_process_parts(sample_input: str):
     assert len(list(aplenty.process_parts())) == 3
 
 
+@pytest.mark.parametrize(
+    "range_, split, first, second",
+    [
+        ((0, 10), 5, (0, 5), (5, 10)),
+        ((0, 10), 0, (None, None), (0, 10)),
+        ((0, 10), 10, (0, 10), (None, None)),
+    ],
+)
+def test_range_split(range_, split, first, second):
+    assert Range(*range_).split(split) == (Range(*first), Range(*second))
+
+
 def test_split():
     l = (0, 1, 2, 3, 4, 5)
-    prange = PartRange.from_single(l)
+    prange = PartRange.from_single(0, 6)
 
     expected = (
-        PartRange(x=(0, 1, 2), m=l, a=l, s=l),
-        PartRange(x=(3, 4, 5), m=l, a=l, s=l),
+        PartRange(x=Range(0, 3), m=Range(0, 6), a=Range(0, 6), s=Range(0, 6)),
+        PartRange(x=Range(3, 6), m=Range(0, 6), a=Range(0, 6), s=Range(0, 6)),
     )
     assert prange.split("x<3") == expected
 
@@ -51,16 +63,16 @@ def test_split():
 def test_apply_range():
     flow = Workflow.from_string("in{x<3:px,qqz}")
     l = (0, 1, 2, 3, 4, 5)
-    prange = PartRange.from_single(l)
+    prange = PartRange.from_single(0, 6)
     expected = {
-        "px": PartRange(x=(0, 1, 2), m=l, a=l, s=l),
-        "qqz": PartRange(x=(3, 4, 5), m=l, a=l, s=l),
+        "px": PartRange(x=Range(0, 3), m=Range(0, 6), a=Range(0, 6), s=Range(0, 6)),
+        "qqz": PartRange(x=Range(3, 6), m=Range(0, 6), a=Range(0, 6), s=Range(0, 6)),
     }
     assert dict(flow.apply_range(prange)) == expected
 
 
 def test_split_combinations():
-    prange = PartRange.from_single(range(1000))
+    prange = PartRange.from_single(0, 1000)
     flow = Workflow.from_string("rfg{s<537:gd,x>440:R,A}")
 
     assert prange.n_combinations() == sum(
@@ -71,7 +83,9 @@ def test_split_combinations():
 def test_process_range(sample_input: str):
     aplenty = Aplenty(sample_input)
     ranges_ = {
-        cls_: tuple([getattr(p, cls_) for p in aplenty.parts]) for cls_ in "xmas"
+        cls_: Range(min(vals), max(vals) + 1)
+        for cls_ in "xmas"
+        if (vals := [getattr(p, cls_) for p in aplenty.parts])
     }
     prange = PartRange(**ranges_)
 

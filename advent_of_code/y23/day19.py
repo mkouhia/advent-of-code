@@ -48,12 +48,55 @@ class Part:
         return f'{{{",".join(parts)}}}'
 
 
+class Range:
+    def __init__(self, start: int, stop: int) -> None:
+        self.start = start
+        self.stop = stop
+
+    def __contains__(self, item: int):
+        return self.start <= item < self.stop
+
+    def __lt__(self, item: int):
+        return self.stop <= item
+
+    def __bool__(self):
+        return self.stop is not None and self.start is not None
+
+    def __len__(self) -> int:
+        return self.stop - self.start
+
+    def __hash__(self):
+        return hash((self.start, self.stop))
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, Range):
+            return False
+        return (self.start, self.stop) == (__value.start, __value.stop)
+
+    def __repr__(self) -> str:
+        return f"<Range({self.start}, {self.stop})>"
+
+    def split(self, split_point: int) -> tuple["Range", "Range"]:
+        """Split this range into two, at split point.
+
+        The split point belongs to the latter split.
+        """
+        if split_point <= self.start:
+            return Range(None, None), self.copy()
+        if self.stop <= split_point:
+            return self.copy(), Range(None, None)
+        return Range(self.start, split_point), Range(split_point, self.stop)
+
+    def copy(self) -> "Range":
+        return Range(self.start, self.stop)
+
+
 @dataclass(frozen=True)
 class PartRange:
-    x: tuple[int, ...]
-    m: tuple[int, ...]
-    a: tuple[int, ...]
-    s: tuple[int, ...]
+    x: Range
+    m: Range
+    a: Range
+    s: Range
 
     def split(self, condition: str) -> tuple["PartRange", "PartRange"]:
         """Split part range by condition.
@@ -69,22 +112,25 @@ class PartRange:
         comp = condition[1]
         value = int(condition[2:])
         assert comp in "<>"
-        oper = operator.lt if comp == "<" else operator.gt
-        accept: list[int] = [i for i in getattr(self, attr_name) if oper(i, value)]
-        discard: list[int] = [i for i in getattr(self, attr_name) if not oper(i, value)]
+        if comp == "<":
+            accept, discard = getattr(self, attr_name).split(value)
+        else:
+            discard, accept = getattr(self, attr_name).split(value + 1)
 
         other_attr = {n: getattr(self, n) for n in "xmas" if n != attr_name}
 
-        trues = PartRange(**{attr_name: tuple(accept)} | other_attr) if accept else None
-        falses = (
-            PartRange(**{attr_name: tuple(discard)} | other_attr) if discard else None
-        )
+        trues = PartRange(**{attr_name: accept} | other_attr) if accept else None
+        falses = PartRange(**{attr_name: discard} | other_attr) if discard else None
         return trues, falses
 
     @classmethod
-    def from_single(cls, iterable_):
-        nums_ = tuple(list(iterable_))
-        return cls(x=nums_, m=nums_, a=nums_, s=nums_)
+    def from_single(cls, start, stop):
+        return cls(
+            x=Range(start, stop),
+            m=Range(start, stop),
+            a=Range(start, stop),
+            s=Range(start, stop),
+        )
 
     def n_combinations(self):
         """Returns amount of distinct part combinations"""
@@ -195,5 +241,5 @@ class Aplenty(Puzzle):
         return sum(p.sum_rating() for p in self.process_parts())
 
     def part2(self) -> str | int:
-        prange = PartRange.from_single(range(1, 4001))
+        prange = PartRange.from_single(1, 4001)
         return sum(r.n_combinations() for r in self.process_range(prange))
