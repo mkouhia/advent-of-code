@@ -4,9 +4,10 @@ from collections.abc import Iterable
 import itertools
 
 from ..base import Puzzle
+from ..helpers import ResultCycler
 
 
-class ParabolicReflectorDish(Puzzle):
+class ParabolicReflectorDish(Puzzle, ResultCycler):
 
     """A rotating platform containing movable or immovable stones."""
 
@@ -14,7 +15,7 @@ class ParabolicReflectorDish(Puzzle):
         super().__init__(input_text)
         self.rows = self.input_text.strip().splitlines()
 
-    def position_hash(self) -> int:
+    def __hash__(self) -> int:
         """Returns hash corresponding to the pattern."""
         return hash(self.pattern)
 
@@ -86,26 +87,16 @@ class ParabolicReflectorDish(Puzzle):
             for row, row_no in zip(rows, range(len(rows), 0, -1))
         )
 
+    def get_result(self):
+        return self.total_load()
+
+    def run_cycle(self):
+        return self.pack_cycle()
+
     def part1(self) -> str | int:
         """Tilt platform north, calculate total load."""
         return self.pack_north().total_load()
 
     def part2(self) -> str | int:
         """Find total load after 1e9 cycles."""
-        hashes = []
-        weights = []
-        base_cycles = 0
-        cycle_modulo = 0
-        while not cycle_modulo:
-            hash_ = self.position_hash()
-            if hash_ in hashes:
-                base_cycles = hashes.index(hash_)
-                cycle_modulo = len(hashes) - base_cycles
-                break
-            weights.append(self.total_load())
-            hashes.append(hash_)
-
-            self.pack_cycle()
-
-        idx = int((1e9 - base_cycles) % cycle_modulo + base_cycles)
-        return weights[idx]
+        return self.find_result_after(1e9)

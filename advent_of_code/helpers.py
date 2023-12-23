@@ -2,11 +2,60 @@
 
 import itertools
 import re
+from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from enum import Enum
 from typing import Callable
 
 import numpy as np
+
+
+class ResultCycler(ABC):
+    @abstractmethod
+    def get_result(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def run_cycle(self):
+        raise NotImplementedError
+
+    def find_result_after(self, n_cycles: int, cumulative=False):
+        hashes = []
+        results = []
+        base_cycles = 0
+        cycle_modulo = 0
+
+        i = 0
+        while not cycle_modulo:
+            hash_ = hash(self)
+            if i == n_cycles:
+                return self.get_result() + (sum(results) if cumulative else 0)
+            if hash_ in hashes:
+                print(hashes)
+                print(i, hash_, self.get_result())
+                base_cycles = hashes.index(hash_)
+                cycle_modulo = len(hashes) - base_cycles
+                break
+            results.append(self.get_result())
+            hashes.append(hash_)
+
+            self.run_cycle()
+            i += 1
+
+        base_offset = (n_cycles - base_cycles) % cycle_modulo
+        n_repeats = (n_cycles - base_cycles) // cycle_modulo
+        idx = int(base_offset + base_cycles)
+
+        print(results, base_cycles, n_repeats, idx)
+
+        if cumulative:
+            return (
+                sum(results[:base_cycles])
+                + n_repeats * sum(results[base_cycles:])
+                + sum(results[base_cycles : idx + 1])
+            )
+
+        return results[idx]
 
 
 class TermColour(Enum):
