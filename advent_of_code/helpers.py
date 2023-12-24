@@ -83,7 +83,7 @@ def highlight_regex(text: str, pattern_dic: dict[str, TermColour]):
 
 
 def highlight_by_pos(
-    text: str, coords: Iterable[int, int], color: TermColour = TermColour.OKGREEN
+    text: str, coords: Iterable[tuple[int, int]], color: TermColour = TermColour.OKGREEN
 ):
     """Highlight text by coordinates in the original string."""
     ret = ""
