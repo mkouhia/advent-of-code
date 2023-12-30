@@ -4,6 +4,7 @@ import itertools
 import re
 
 import numpy as np
+import sympy
 
 from ..base import Puzzle
 
@@ -16,6 +17,9 @@ class Vector:
     @classmethod
     def from_string(cls, string: str):
         return cls(*list(map(int, re.split("[,@]", string))))
+
+    def tolist(self):
+        return self.pos.tolist() + self.vel.tolist()
 
     @property
     def k2d(self):
@@ -81,9 +85,45 @@ class NeverTellMeTheOdds(Puzzle):
 
         return count
 
+    def find_intersecting_path(self) -> Vector:
+        """Find path, which intersects with all hailstones.
+
+        The path is found by first three stones, with equations
+            p + v * ti = pi + vi * ti ,
+        thus
+            x + vx * ti = xi + vxi * ti
+            y + vy * ti = yi + vyi * ti
+            z + vz * ti = zi + vzi * ti
+
+        and then equating ti out from each pair of equations.
+
+        Returns:
+            Intersecting vector with integer components.
+        """
+        x, y, z, vx, vy, vz = sympy.symbols("x0, y0, z0, vx0, vy0, vz0")
+        x1, y1, z1, vx1, vy1, vz1 = self.particles[0].tolist()
+        x2, y2, z2, vx2, vy2, vz2 = self.particles[1].tolist()
+        x3, y3, z3, vx3, vy3, vz3 = self.particles[2].tolist()
+
+        sols = sympy.solve(
+            [
+                (x1 - x) * (vy - vy1) - (y1 - y) * (vx - vx1),
+                (y1 - y) * (vz - vz1) - (z1 - z) * (vy - vy1),
+                (x2 - x) * (vy - vy2) - (y2 - y) * (vx - vx2),
+                (y2 - y) * (vz - vz2) - (z2 - z) * (vy - vy2),
+                (x3 - x) * (vy - vy3) - (y3 - y) * (vx - vx3),
+                (y3 - y) * (vz - vz3) - (z3 - z) * (vy - vy3),
+            ],
+            (x, y, z, vx, vy, vz),
+        )
+        for sol in sols:
+            if all(isinstance(v, sympy.core.numbers.Integer) for v in sol):
+                return Vector(*[int(v) for v in sol])
+
     def part1(self) -> str | int:
         """How many particles collide within the test area?"""
         return self.num_intersections((200000000000000, 400000000000000))
 
     def part2(self) -> str | int:
-        return super().part2()
+        vec = self.find_intersecting_path()
+        return int(sum(vec.pos))

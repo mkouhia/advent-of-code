@@ -46,6 +46,5 @@ def test_intersections(sample_input: str):
     assert part1.num_intersections((7, 27)) == 2
 
 
-@pytest.mark.skip
 def test_part2(sample_input: str):
-    assert NeverTellMeTheOdds(sample_input).part2() == ...
+    assert NeverTellMeTheOdds(sample_input).part2() == 47
