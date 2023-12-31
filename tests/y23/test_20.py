@@ -142,5 +142,6 @@ def test_part1(input_txt: str, expected):
 
 
 @pytest.mark.skip
-def test_part2(sample_input: str):
-    assert PulsePropagation(sample_input).part2() == ...
+def test_part2():
+    """No tests this time :("""
+    ...

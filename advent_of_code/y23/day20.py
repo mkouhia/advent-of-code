@@ -1,14 +1,14 @@
 """https://adventofcode.com/2023/day/20"""
 
 from abc import ABC, abstractmethod
-from collections import deque, namedtuple
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-import sys
+import math
 
-from advent_of_code.helpers import ResultCycler
 from ..base import Puzzle
+from ..helpers import ResultCycler
 
 
 class Signal(Enum):
@@ -31,6 +31,7 @@ class MessageQueue:
         self.queue: deque[Message] = deque([])
         self.connected: dict[str, Module] = {}
         self.out_file = out_file
+        self.callables: dict[str, Callable] = {}
 
     def make_inverse_connections(self):
         conj_back = {
@@ -57,11 +58,18 @@ class MessageQueue:
             if message.to_ in self.connected:
                 self.connected[message.to_].process(message)
 
+            if message.to_ in self.callables:
+                fun = self.callables[message.to_]
+                fun(message)
+
             if message.signal is Signal.high:
                 n_high += 1
             else:
                 n_low += 1
         return n_high, n_low
+
+    def connect(self, to_, callable):
+        self.callables[to_] = callable
 
 
 class PulsePropagation(Puzzle, ResultCycler):
@@ -82,6 +90,13 @@ class PulsePropagation(Puzzle, ResultCycler):
 
         self.button = Broadcaster("button", "broadcaster")
         self.button.connect(self.messages)
+
+    def get_parents(self, node):
+        ret = []
+        for p in self.modules.values():
+            if node in p.destinations:
+                ret.append(p.name)
+        return ret
 
     def __hash__(self):
         val = hash(self.input_text)
@@ -106,7 +121,36 @@ class PulsePropagation(Puzzle, ResultCycler):
         return int(val_.real * val_.imag)
 
     def part2(self) -> str | int:
-        return super().part2()
+        p0 = self.get_parents("rx")
+        dests = self.get_parents(p0[0])
+
+        low_flags = []
+
+        def detect_low(message: Message):
+            if message.signal is Signal.low:
+                low_flags.append(message.to_)
+
+        for dest in dests:
+            self.messages.connect(dest, detect_low)
+
+        rollover_rounds = {}
+        i = 0
+        while True:
+            # Round i: 0 -> pre-button press
+            if low_flags:
+                for id_ in low_flags:
+                    if id_ not in rollover_rounds:
+                        rollover_rounds[id_] = i
+                low_flags.clear()
+
+            self.run_cycle()
+
+            if len(rollover_rounds) == len(dests):
+                break
+
+            i += 1
+
+        return math.lcm(*rollover_rounds.values())
 
 
 class Module(ABC):
